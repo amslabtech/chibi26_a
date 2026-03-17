@@ -59,6 +59,20 @@ void ObstacleDetector::scan_obstacle()
             float range = laser_->ranges[i];
             float angle = laser_->angle_min + (i * laser_->angle_increment);
 
+            // 何も当たらなかった方向も「ここまでは道ですよ」と教えるために、最大距離を代入して追加する
+            // if (std::isinf(range) || std::isnan(range)) {
+            //     float max_map_range = 5.0; // マップのサイズに合わせた適切な距離(m)
+            //     geometry_msgs::msg::Pose pose;
+            //     pose.position.x = max_map_range * std::cos(angle);
+            //     pose.position.y = max_map_range * std::sin(angle);
+            //     message.poses.push_back(pose);
+            //     continue;
+            // }
+            // --- ここが重要：後方や射程外もカバーする ---
+            if (std::isinf(range) || std::isnan(range) || range > laser_->range_max) {
+                range = 5.0; // マップの端まで白くしたい距離（例: 5m）を指定
+            }
+
             // 極座標 (range, angle) から直交座標 (x, y) へ変換
             geometry_msgs::msg::Pose pose;
             pose.position.x = range * std::cos(angle);

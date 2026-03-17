@@ -65,13 +65,35 @@ void LocalMapCreator::update_map()
     // マップを初期化する
     std::fill(local_map_.data.begin(), local_map_.data.end(), -1);
 
+    int start_gx = (int)local_map_.info.width / 2;
+    int start_gy = (int)local_map_.info.height / 2;
+
     // 障害物の位置を考慮してマップを更新する
     for(const auto &pose : obs_poses_.poses){
-        int index = xy_to_grid_index(pose.position.x, pose.position.y);
+        // int index = xy_to_grid_index(pose.position.x, pose.position.y);
+        
+        // // マップの範囲内（有効なインデックス）であれば「100：占有」を書き込む
+        // if(index != -1){
+        //     local_map_.data[index] = 100;
+        // }
 
-        // マップの範囲内（有効なインデックス）であれば「100：占有」を書き込む
-        if(in_map()){
-            local_map_.data[index] = 100;
+        double dist = std::hypot(pose.position.x, pose.position.y);
+        
+        // 障害物の座標をグリッド単位に変換
+        int end_gx = std::floor((pose.position.x - local_map_.info.origin.position.x) / map_reso_);
+        int end_gy = std::floor((pose.position.y - local_map_.info.origin.position.y) / map_reso_);
+
+        // 2. 【追加】中心からその点までを「白（0：空き）」で塗りつぶす
+        // これでLidarが通った軌跡が白くなります
+        raytrace(start_gx, start_gy, end_gx, end_gy);
+
+        // 3. 【修正】本当に障害物（柱より遠い）場合だけ「黒（100）」を置く
+        // 柱の除去距離（0.81m）より遠いものだけを描画
+        if (dist >= 0.81) { 
+            int index = xy_to_grid_index(pose.position.x, pose.position.y);
+            if (index != -1) {
+                local_map_.data[index] = 100;
+            }
         }
     }
 
@@ -124,4 +146,28 @@ int LocalMapCreator::xy_to_grid_index(const double x, const double y)
     }
     
     return gy * (int)map_size_ + gx;
+}
+
+void LocalMapCreator::raytrace(int x0, int y0, int x1, int y1) {
+    int dx = abs(x1 - x0);
+    int dy = abs(y1 - y0);
+    int sx = (x0 < x1) ? 1 : -1;
+    int sy = (y0 < y1) ? 1 : -1;
+    int err = dx - dy;
+
+    while (true) {
+        // 終点（障害物があるマス）に到達したら終了
+        if (x0 == x1 && y0 == y1) break;
+
+        // マップの範囲内なら「0：空き」を書き込む
+        if (x0 >= 0 && x0 < (int)map_size_ && y0 >= 0 && y0 < (int)map_size_) {
+            local_map_.data[y0 * (int)map_size_ + x0] = 0;
+        } else {
+            break; // マップ外に出たら終了
+        }
+
+        int e2 = 2 * err;
+        if (e2 > -dy) { err -= dy; x0 += sx; }
+        if (e2 < dx) { err += dx; y0 += sy; }
+    }
 }
