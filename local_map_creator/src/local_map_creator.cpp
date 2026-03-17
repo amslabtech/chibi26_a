@@ -63,14 +63,14 @@ void LocalMapCreator::process()
 void LocalMapCreator::update_map()
 {
     // マップを初期化する
-    std::fill(local_map_.data.begin(), local_map_.data.end(), 0);
+    std::fill(local_map_.data.begin(), local_map_.data.end(), -1);
 
     // 障害物の位置を考慮してマップを更新する
     for(const auto &pose : obs_poses_.poses){
         int index = xy_to_grid_index(pose.position.x, pose.position.y);
 
         // マップの範囲内（有効なインデックス）であれば「100：占有」を書き込む
-        if(index != -1){
+        if(in_map()){
             local_map_.data[index] = 100;
         }
     }
