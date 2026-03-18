@@ -1,0 +1,30 @@
+import os
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+def generate_launch_description():
+    package_name = 'team_global_path_planner'
+
+    # パラメータの設定
+    # A*が経由する座標リスト
+    config_params = {
+        'margin': 0.3,
+        'way_points_x': [0.0, -17.1, -17.0, 16.5, 16.5, 0.0],
+        'way_points_y': [0.0, -0.767, -14.6, -14.5, -0.898, 0.0],
+        'test_show': True,
+        'sleep_time': 0.01
+    }
+
+    # ノードの定義
+    planner_node = Node(
+        package=package_name,
+        executable='team_global_path_planner_node', # ${PROJECT_NAME}_node に対応
+        name='teamA_path_planner',
+        output='screen',
+        parameters=[config_params]
+    )
+
+    return LaunchDescription([
+        planner_node
+    ])

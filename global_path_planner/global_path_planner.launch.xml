@@ -1,0 +1,16 @@
+<launch>
+  <arg name="margin" default="0.3" />
+  <arg name="way_points_x" default="[0.0, 2.0, 5.0]" />
+  <arg name="way_points_y" default="[0.0, 0.0, 3.0]" />
+
+  <node pkg="global_path_planner" exec="global_path_planner_node" name="astar_planner" output="screen">
+    <param name="margin" value="$(var margin)" />
+    <param name="way_points_x" value="$(var way_points_x)" type="double_array" />
+    <param name="way_points_y" value="$(var way_points_y)" type="double_array" />
+    <param name="test_show" value="true" />
+    <param name="sleep_time" value="0.01" />
+    
+    </node>
+
+  <node pkg="rviz2" exec="rviz2" name="rviz2" args="-d $(find-pkg-share global_path_planner)/rviz/config.rviz" />
+</launch>
