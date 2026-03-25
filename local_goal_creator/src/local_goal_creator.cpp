@@ -16,13 +16,18 @@ LocalGoalCreator::LocalGoalCreator() : Node("LocalGoalCreator")
 
     // Subscriberの定義
     path_sub_ = this->create_subscription<nav_msgs::msg::Path>(
-        "path", 10, std::bind(&LocalGoalCreator::pathCallback, this, std::placeholders::_1));
+        "/global_path", 10, std::bind(&LocalGoalCreator::pathCallback, this, std::placeholders::_1));
     
     pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-        "current_pose", 10, std::bind(&LocalGoalCreator::poseCallback, this, std::placeholders::_1));
+        "/current_pose", 10, std::bind(&LocalGoalCreator::poseCallback, this, std::placeholders::_1));
 
     // Publisherの定義
     local_goal_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>("local_goal", 10);
+
+    timer_ = this->create_wall_timer(
+        std::chrono::milliseconds(100),  // 10Hz
+        std::bind(&LocalGoalCreator::process, this)
+    );
 
     RCLCPP_INFO(this->get_logger(), "Local Goal Creator Node has been started.");
 
@@ -59,6 +64,9 @@ void LocalGoalCreator::publishGoal()
     //ゴールまでの距離の計算を行う
     //設定値に応じて，ゴール位置の変更を行う
     // 現在のgoal_indexから先のパスを探索
+
+    pose_.pose.position.x = 0.0;
+    pose_.pose.position.y = 0.0;
 
     // 1. 現在のゴール(goal_index_)とロボットの距離を計算
     double dist_to_goal = getDistance();
