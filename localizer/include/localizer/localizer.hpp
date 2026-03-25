@@ -30,6 +30,11 @@ class Localizer : public rclcpp::Node
         void initialize();  // パーティクルの初期化
         void process();     // main文のループ内で実行する関数
     private:
+        void initialize_particles(double x, double y, double yaw);
+        double get_yaw_from_quat(const geometry_msgs::msg::Quaternion& q);
+        //void initialize_particles(double x, double y, double yaw);
+        double move_angle_th_;
+        double expansion_threshold_;
         // ----- 関数（引数あり）------
         // コールバック関数
         void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);

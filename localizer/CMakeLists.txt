@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(team_localizer)
+project(a_localizer)
 
 # find dependencies
 find_package(ament_cmake_auto REQUIRED)
@@ -15,7 +15,7 @@ ament_auto_add_executable(${PROJECT_NAME}_node
 # launchファイルをインストール（ament_package_indexが探せる場所に置く）
 install(DIRECTORY
   launch
-  param
+  config
   DESTINATION share/${PROJECT_NAME}/
 )
 # ヘッダーのインストールや共有ライブラリのエクスポート等を自動で行ってくれる
