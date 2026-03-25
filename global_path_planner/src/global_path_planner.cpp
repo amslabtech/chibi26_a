@@ -11,7 +11,7 @@ Astar::Astar() : Node("teamA_path_planner"), clock_(RCL_ROS_TIME)
     this->declare_parameter("margin", 0.3);
     this->declare_parameter("way_points_x", std::vector<double>{0.0, -17.1, -17.0, 16.5, 16.5, 0.0});
     this->declare_parameter("way_points_y", std::vector<double>{0.0, -0.767, -14.6, -14.5, -0.898, 0.0});
-    this->declare_parameter("test_show", true);
+    this->declare_parameter("test_show", false);
     this->declare_parameter("sleep_time", 0.01);
 
     margin_ = this->get_parameter("margin").as_double();
@@ -259,7 +259,7 @@ void Astar::planning()
 
         while (!open_list_.empty()) {
             Node_ current = select_min_f();
-            show_node_point(current);
+            //show_node_point(current);
             if (check_goal(current)) {
                 close_list_.push_back(current);
                 create_path(current);
