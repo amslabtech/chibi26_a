@@ -10,7 +10,7 @@ ObstacleDetector::ObstacleDetector()
 {
    // global変数を定義(yamlファイルからパラメータを読み込めるようにすると，パラメータ調整が楽)
     this->declare_parameter("hz", 10);
-    this->declare_parameter("ignore_dist", 0.1);
+    this->declare_parameter("ignore_dist", 0.5);
     this->declare_parameter("laser_step", 1);
     this->declare_parameter("robot_frame", "base_link");
 
@@ -22,7 +22,7 @@ ObstacleDetector::ObstacleDetector()
     //sub && pub && timer
     timer_ = this->create_wall_timer(std::chrono::milliseconds(1000 / hz_) ,std::bind(&ObstacleDetector::process, this));
     scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>("scan", 10, std::bind(&ObstacleDetector::scan_callback, this, std::placeholders::_1));
-    obs_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("obs", 10);
+    obs_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("obstacle_points", 10);
 }
 
 //Lidarから障害物の情報を取得
@@ -100,23 +100,23 @@ bool ObstacleDetector::is_ignore_scan(int index)
     float angle = laser_->angle_min + (index * laser_->angle_increment);
 
     // 柱を無視する（角度 ＋ 距離の条件を追加）
-    float dist_limit = 0.81; // 柱があると思われる最大距離
+    // float ignore_dist = 0.81; // 柱があると思われる最大距離<-yamlファイルからobs_distとして入力している
 
-    if(range < dist_limit) { 
-        return true; 
+    if(range < obs_dist) { 
+        //右前の柱を無視＜45度=0.785rad（0.7rad ~ 0.85rad）付近＞
+        if((angle > 0.7 && angle < 0.85) && range < obs_dist) return true;
+
+        //右後の柱を無視＜135度=2.356rad（2.2rad ~ 2.4rad）付近＞
+        if((angle > 2.2 && angle < 2.4) && range < obs_dist) return true;
+
+        //左後の柱を無視＜-45度=-0.785rad（-0.85rad ~ -0.7rad）付近＞
+        if((angle > -0.85 && angle < -0.7) && range < obs_dist) return true;
+
+        //左前の柱を無視＜-135度=-2.356rad（-2.4rad ~ -2.0rad）付近＞
+        if((angle > -2.4 && angle < -2.0) && range < obs_dist) return true;
+        
+        // return true; 
     }
-
-    //右前の柱を無視＜45度=0.785rad（0.7rad ~ 0.85rad）付近＞
-    if((angle > 0.7 && angle < 0.85) && range < dist_limit) return true;
-
-    //右後の柱を無視＜135度=2.356rad（2.2rad ~ 2.4rad）付近＞
-    if((angle > 2.2 && angle < 2.4) && range < dist_limit) return true;
-
-    //左後の柱を無視＜-45度=-0.785rad（-0.85rad ~ -0.7rad）付近＞
-    if((angle > -0.85 && angle < -0.7) && range < dist_limit) return true;
-
-    //左前の柱を無視＜-135度=-2.356rad（-2.4rad ~ -2.0rad）付近＞
-    if((angle > -2.4 && angle < -2.0) && range < dist_limit) return true;
     
     return false;
 }

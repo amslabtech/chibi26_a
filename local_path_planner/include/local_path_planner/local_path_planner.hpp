@@ -24,8 +24,6 @@ speed         : 速度の総称(vel, yawrate)
 #include <tf2/utils.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
-#include "roomba_500driver_meiji/msg/roomba_ctrl.hpp"
-
 // =========================
 // 構造体定義
 // =========================
