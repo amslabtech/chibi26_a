@@ -6,7 +6,7 @@
 using namespace std::chrono_literals;
 
 ObstacleDetector::ObstacleDetector()
-: Node("b_obstacle_detector")
+: Node("a_obstacle_detector")
 {
    // global変数を定義(yamlファイルからパラメータを読み込めるようにすると，パラメータ調整が楽)
     this->declare_parameter("hz", 10);
