@@ -1,65 +1,121 @@
 #include "localizer/localizer.hpp"
 
 // デフォルトコンストラクタ
-// パラメータの宣言と取得
-// Subscriber，Publisherの設定
-// frame idの設定
-// パーティクルクラウドのメモリの確保
-// odometryのモデルの初期化
 Localizer::Localizer() : Node("team_localizer")
 { 
-    // パラメータの宣言
+    // ----- パラメータの宣言と取得 -----
+
+    // 1. 基本設定
     this->declare_parameter("hz", 10);
     this->declare_parameter("max_particle_num", 500);
+    this->declare_parameter("min_particle_num", 100);
+    this->declare_parameter("move_dist_th", 0.05);
+    this->declare_parameter("move_angle_th", 0.05);
+
+    this->get_parameter("hz", hz_);
+    this->get_parameter("max_particle_num", max_particle_num_);
+    this->get_parameter("min_particle_num", min_particle_num_);
+    this->get_parameter("move_dist_th", move_dist_th_);
+    this->get_parameter("move_angle_th", move_angle_th_);
+
+    // 2. 初期ポーズ関連
     this->declare_parameter("init_x", 0.0);
     this->declare_parameter("init_y", 0.0);
     this->declare_parameter("init_yaw", 0.0);
+    this->declare_parameter("init_x_dev", 0.1);
+    this->declare_parameter("init_y_dev", 0.1);
+    this->declare_parameter("init_yaw_dev", 0.05);
 
-    // パラメータの取得
-    this->get_parameter("hz", hz_);
-    this->get_parameter("max_particle_num", max_particle_num_);
+    this->get_parameter("init_x", init_x_);
+    this->get_parameter("init_y", init_y_);
+    this->get_parameter("init_yaw", init_yaw_);
+    this->get_parameter("init_x_dev", init_x_dev_);
+    this->get_parameter("init_y_dev", init_y_dev_);
+    this->get_parameter("init_yaw_dev", init_yaw_dev_);
 
-    // Subscriberの設定
-    sub_map_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>("map", 10, std::bind(&Localizer::map_callback, this, std::placeholders::_1));
-    sub_odom_ = this->create_subscription<nav_msgs::msg::Odometry>("odom", 10, std::bind(&Localizer::odom_callback, this, std::placeholders::_1));
-    sub_laser_ = this->create_subscription<sensor_msgs::msg::LaserScan>("scan", 10, std::bind(&Localizer::laser_callback, this, std::placeholders::_1));
+    // 3. リセット関連
+    this->declare_parameter("alpha_th", 0.01);
+    this->declare_parameter("expansion_threshold", 0.005);
+    this->declare_parameter("reset_count_limit", 5);
+    this->declare_parameter("expansion_x_dev", 0.5);
+    this->declare_parameter("expansion_y_dev", 0.5);
+    this->declare_parameter("expansion_yaw_dev", 0.2);
 
-    // Publisherの設定
-    pub_estimated_pose_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("estimated_pose", 10);
-    pub_particle_cloud_ = this->create_publisher<geometry_msgs::msg::PoseArray>("particle_cloud", 10);
+    this->get_parameter("alpha_th", alpha_th_);
+    this->get_parameter("expansion_threshold", expansion_threshold_);
+    this->get_parameter("reset_count_limit", reset_count_limit_);
+    this->get_parameter("expansion_x_dev", expansion_x_dev_);
+    this->get_parameter("expansion_y_dev", expansion_y_dev_);
+    this->get_parameter("expansion_yaw_dev", expansion_yaw_dev_);
 
-    // frame idの設定
-    estimated_pose_msg_.header.frame_id = "map";
-    particle_cloud_msg_.header.frame_id = "map";
+    // 4. センサ関連
+    this->declare_parameter("laser_step", 10);
+    this->declare_parameter("sensor_noise_ratio", 0.05);
+    this->declare_parameter("ignore_angle_range_list", std::vector<double>{});
 
-    // パーティクルクラウドのメモリの確保
-    particle_cloud_msg_.poses.reserve(max_particle_num_);
+    this->get_parameter("laser_step", laser_step_);
+    this->get_parameter("sensor_noise_ratio", sensor_noise_ratio_);
+    this->get_parameter("ignore_angle_range_list", ignore_angle_range_list_);
 
-    // odometryのモデルの初期化
+    // 5. OdomModel関連 (ff, fr, rf, rr)
     this->declare_parameter("ff", 0.17);
     this->declare_parameter("fr", 0.0005);
     this->declare_parameter("rf", 0.13);
     this->declare_parameter("rr", 0.2);
 
-    double ff, fr, rf, rr;
-    this->get_parameter("ff", ff);
-    this->get_parameter("fr", fr);
-    this->get_parameter("rf", rf);
-    this->get_parameter("rr", rr);
+    this->get_parameter("ff", ff_);
+    this->get_parameter("fr", fr_);
+    this->get_parameter("rf", rf_);
+    this->get_parameter("rr", rr_);
 
-    odom_model_ = OdomModel(ff, fr, rf, rr);
+    // 6. その他のフラグ
+    this->declare_parameter("flag_init_noise", true);
+    this->declare_parameter("flag_reverse", false);
 
-    double i_x, i_y, i_yaw;
-    this->get_parameter("init_x", i_x);
-    this->get_parameter("init_y", i_y);
-    this->get_parameter("init_yaw", i_yaw);
+    this->get_parameter("flag_init_noise", flag_init_noise_);
+    this->get_parameter("flag_reverse", flag_reverse_);
 
-    initialize_particles(i_x, i_y, i_yaw);
+    // ----- オブジェクトの初期化 -----
 
-    RCLCPP_INFO(this->get_logger(), "Localizer: Initialized with YAML parameters.");
+    // odometryのモデルの初期化
+    odom_model_ = OdomModel(ff_, fr_, rf_, rr_);
 
+    // Subscriberの設定
+    sub_map_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
+        "map", rclcpp::QoS(rclcpp::KeepLast(1)).reliable().transient_local(), 
+        std::bind(&Localizer::map_callback, this, std::placeholders::_1));
+    
+    sub_odom_ = this->create_subscription<nav_msgs::msg::Odometry>(
+        "odom", 10, std::bind(&Localizer::odom_callback, this, std::placeholders::_1));
+    
+    sub_laser_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
+        "scan", 10, std::bind(&Localizer::laser_callback, this, std::placeholders::_1));
+
+    sub_initialpose_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+        "/initialpose", rclcpp::SystemDefaultsQoS(), 
+        std::bind(&Localizer::callback_initialpose, this, std::placeholders::_1));
+
+    // Publisherの設定
+    pub_estimated_pose_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("estimated_pose", 10);
+    pub_particle_cloud_ = this->create_publisher<geometry_msgs::msg::PoseArray>("particle_cloud", 10);
+
+    // フレームIDの設定
+    estimated_pose_msg_.header.frame_id = "map";
+    particle_cloud_msg_.header.frame_id = "map";
+
+    // メモリ確保と初期化
+    particle_cloud_msg_.poses.reserve(max_particle_num_);
+    
+    // 変数の初期化
+    flag_broadcast_ = false;
+    is_visible_ = true;
+    reset_counter = 0;
+
+    // パーティクルの初期配置
+    initialize_particles(init_x_, init_y_, init_yaw_);
+
+    RCLCPP_INFO(this->get_logger(), "Localizer: Initialized with all parameters.");
 }
-
 // mapのコールバック関数
 void Localizer::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
 {
