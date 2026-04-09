@@ -58,11 +58,14 @@ class Localizer : public rclcpp::Node
         void   publish_estimated_pose();   // 推定位置のパブリッシュ
         void   publish_particles();        // パーティクルクラウドのパブリッシュ
         double calc_marginal_likelihood(); // 周辺尤度の算出
+        void callback_initialpose(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
 
         // Subscriber
         rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr sub_map_;
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr sub_odom_;
         rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr sub_laser_;
+        rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr sub_initialpose_;
+        
 
         // Publisher
         rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pub_estimated_pose_;
@@ -99,6 +102,8 @@ class Localizer : public rclcpp::Node
         // リスト
         std::vector<Particle> particles_;             // パーティクルクラウド（計算用）
         std::vector<double> ignore_angle_range_list_; // 柱に関する角度範囲の配列 [rad]
+
+        std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
         // msg受け取りフラグ
         bool flag_map_     = false;
