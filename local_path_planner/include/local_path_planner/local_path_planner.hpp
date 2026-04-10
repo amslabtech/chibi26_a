@@ -24,7 +24,7 @@ speed         : 速度の総称(vel, yawrate)
 #include <tf2/utils.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
-#include "roomba_500driver_meiji/msg/roomba_ctrl.hpp"
+//#include "roomba_500driver_meiji/msg/roomba_ctrl.hpp"
 
 // =========================
 // 構造体定義
@@ -146,9 +146,10 @@ private:
     rclcpp::Subscription<geometry_msgs::msg::PoseArray>::SharedPtr sub_obs_poses_;
 
     // Publisher
-    rclcpp::Publisher<roomba_500driver_meiji::msg::RoombaCtrl>::SharedPtr pub_cmd_speed_;
+    rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr pub_cmd_speed_;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub_optimal_path_;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub_predict_path_;
+    //rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;  // 制御入力
 
     // pose関連
     geometry_msgs::msg::PointStamped local_goal_; // local path用の目標位置
@@ -159,7 +160,7 @@ private:
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
     // 制御入力
-    roomba_500driver_meiji::msg::RoombaCtrl cmd_speed_;
+    geometry_msgs::msg::Twist cmd_speed_;
 };
 
 #endif
