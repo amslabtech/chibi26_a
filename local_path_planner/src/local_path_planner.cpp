@@ -108,7 +108,7 @@ DWAPlanner::DWAPlanner() : Node("local_path_planner"), clock_(RCL_ROS_TIME)
     sub_obs_poses_ = this->create_subscription<geometry_msgs::msg::PoseArray>("obs" ,rclcpp::QoS(1), std::bind(&DWAPlanner::obs_poses_callback, this, std::placeholders::_1));
 
     // ###### Publisher ######
-    pub_cmd_speed_ = this->create_publisher<roomba_500driver_meiji::msg::RoombaCtrl>("roomba_control", 10);
+    pub_cmd_speed_ = this->create_publisher<geometry_msgs::msg::Twist>("roomba_control", 10);
     if (is_visible_) {
         pub_optimal_path_ = this->create_publisher<nav_msgs::msg::Path>("optimal_path", 10);
         pub_predict_path_ = this->create_publisher<nav_msgs::msg::Path>("predict_paths", 10);
@@ -188,10 +188,10 @@ bool DWAPlanner::can_move()
 // Roombaの制御入力を行う
 void DWAPlanner::roomba_control(const double velocity, const double yawrate)
 {
-    roomba_500driver_meiji::msg::RoombaCtrl msg;
-    msg.mode = 11; // 任意のモード（ドライバの仕様に合わせる）
-    msg.cntl.linear.x = velocity;
-    msg.cntl.angular.z = yawrate;
+    geometry_msgs::msg::Twist msg;
+    //msg.mode = 11; // 任意のモード（ドライバの仕様に合わせる）
+    msg.linear.x = velocity;
+    msg.angular.z = yawrate;
     pub_cmd_speed_->publish(msg);
 }
 
