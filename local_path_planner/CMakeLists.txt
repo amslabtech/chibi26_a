@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(team_local_path_planner)
+project(a_local_path_planner)
 
 # find dependencies
 find_package(ament_cmake_auto REQUIRED)
@@ -12,9 +12,10 @@ ament_auto_add_executable(${PROJECT_NAME}_node
   src/local_path_planner.cpp
   src/local_path_planner_node.cpp)
 # launchファイルをインストール（ament_package_indexが探せる場所に置く）
-install(DIRECTORY
-  launch
-  DESTINATION share/${PROJECT_NAME}/
-)
+#install(DIRECTORY
+  #launch
+  #config  
+  #DESTINATION share/${PROJECT_NAME}/
+#)
 # ヘッダーのインストールや共有ライブラリのエクスポート等を自動で行ってくれる
-ament_auto_package()
+ament_auto_package(USE_SCOPED_HEADER_INSTALL_DIR)

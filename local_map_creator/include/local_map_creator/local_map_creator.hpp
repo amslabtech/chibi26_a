@@ -24,7 +24,8 @@ class LocalMapCreator : public rclcpp::Node
         bool in_map(const double dist, const double angle);         // マップ内か判断
         int  get_grid_index(const double dist, const double angle); // グリッドのインデックスを返す
         int  xy_to_grid_index(const double x, const double y);      // グリッドのインデックスを返す
-
+        void raytrace(int x0, int y0, int x1, int y1);
+        
         // ----- 関数（引数なし）-----
         void init_map();   // マップの初期化
         void update_map(); // マップの更新

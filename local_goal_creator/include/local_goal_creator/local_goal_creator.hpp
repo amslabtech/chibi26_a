@@ -22,7 +22,7 @@ private:
     int hz_;
     int index_step_;
     int goal_index_;
-    double taeget_distance_;
+    double target_distance_;
     bool is_path_ = false;
 
     //　Subscriber
@@ -36,6 +36,7 @@ private:
     nav_msgs::msg::Path path_;
     geometry_msgs::msg::PointStamped goal_;
     geometry_msgs::msg::PoseStamped pose_;
+    rclcpp::TimerBase::SharedPtr timer_;
 };
 
 #endif // LOCAL_GOAL_CREATOR_H

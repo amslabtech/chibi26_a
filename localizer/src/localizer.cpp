@@ -107,7 +107,7 @@ Localizer::Localizer() : Node("team_localizer")
     particle_cloud_msg_.poses.reserve(max_particle_num_);
     
     // 変数の初期化
-    flag_broadcast_ = false;
+    flag_broadcast_ = true;
     is_visible_ = true;
     reset_counter = 0;
 
@@ -212,7 +212,7 @@ void Localizer::initialize()
 // tfのbroadcastと位置推定，パブリッシュを行う
 void Localizer::process()
 {
-    if(flag_map_ && flag_odom_ && flag_laser_)
+    if(flag_odom_)
     {
         localize();             // 自己位置推定実行
         broadcast_odom_state(); // TF配信
@@ -279,8 +279,8 @@ void Localizer::broadcast_odom_state()
         odom_state.header.stamp = this->now();
 
         // 親フレーム・子フレームの指定
-        odom_state.header.frame_id = map_.header.frame_id;
-        odom_state.child_frame_id  = last_odom_.header.frame_id;
+        odom_state.header.frame_id = "map";
+        odom_state.child_frame_id  = "odom";
 
         // map座標系からみたodom座標系の原点位置と方向の格納
         odom_state.transform = tf2::toMsg(map_to_odom);
@@ -544,19 +544,37 @@ double Localizer::get_yaw_from_quat(const geometry_msgs::msg::Quaternion& q)
     return yaw;
 }
 
-// パーティクルを初期化する関数
+// 1. パーティクルを初期化する関数（数値3つを受け取る）
 void Localizer::initialize_particles(double x, double y, double yaw)
 {
-    // 既存の particles_ が空だとループが回らないので、
-    // コンストラクタで指定した max_particle_num_ 分だけリサイズして確保
     if (particles_.empty()) {
         particles_.resize(max_particle_num_);
     }
 
     for (auto& p : particles_) {
-        p.pose_ = Pose(x, y, yaw); 
+        // パラメータの標準偏差を使って散らす
+        double px = norm_rv(x, init_x_dev_);
+        double py = norm_rv(y, init_y_dev_);
+        double pyaw = norm_rv(yaw, init_yaw_dev_);
+        p.pose_.set(px, py, pyaw); 
     }
-    
-    // すでに定義されている関数を使って重みを一括初期化（private問題を回避）
     reset_weight(); 
+}
+
+// 2. RVizからの初期位置を受け取るコールバック（メッセージを受け取る）
+void Localizer::callback_initialpose(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
+{
+    RCLCPP_INFO(this->get_logger(), "Initial pose received from RViz!");
+
+    // メッセージから数値を取り出す
+    double x = msg->pose.pose.position.x;
+    double y = msg->pose.pose.position.y;
+    double yaw = get_yaw_from_quat(msg->pose.pose.orientation);
+
+    // 数値を渡してパーティクルを初期化
+    initialize_particles(x, y, yaw);
+
+    // 推定位置も更新
+    estimated_pose_.set(x, y, yaw);
+    flag_broadcast_ = true; 
 }
