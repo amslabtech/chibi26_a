@@ -68,10 +68,11 @@ void ObstacleDetector::scan_obstacle()
             //     message.poses.push_back(pose);
             //     continue;
             // }
+
             // --- ここが重要：後方や射程外もカバーする ---
-            if (std::isinf(range) || std::isnan(range) || range > laser_->range_max) {
-                range = 5.0; // マップの端まで白くしたい距離（例: 5m）を指定
-            }
+            // if (std::isinf(range) || std::isnan(range) || range > laser_->range_max) {
+            //     range = 5.0; // マップの端まで白くしたい距離（例: 5m）を指定
+            // }
 
             // 極座標 (range, angle) から直交座標 (x, y) へ変換
             geometry_msgs::msg::Pose pose;

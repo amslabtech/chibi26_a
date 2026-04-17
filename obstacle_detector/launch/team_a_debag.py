@@ -11,10 +11,10 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
     return LaunchDescription([
         Node(
-            package='team_obstacle_detector',
-            executable='team_obstacle_detector_node',
-            parameters=[{'use_sim_time': True}],
-            #  parameters=[{'use_sim_time': False}],
+            package='a_obstacle_detector',
+            executable='a_obstacle_detector_node',
+            # parameters=[{'use_sim_time': True}],
+            parameters=[{'use_sim_time': False}],
         ),
         # Node(
         #     package='teamb_local_map_creator',
@@ -24,35 +24,35 @@ def generate_launch_description():
         # ),
         Node(
             package='a_localizer',
-            executable='team_localizer_node',
-            parameters=[{'use_sim_time': True}],
-            #  parameters=[{'use_sim_time': False}],
+            executable='a_localizer_node',
+            # parameters=[{'use_sim_time': True}],
+            parameters=[{'use_sim_time': False}],
         ),
         Node(
-            package='team_global_path_planner',
-            executable='team_global_path_planner_node',
-            parameters=[{'use_sim_time': True}],
-            #  parameters=[{'use_sim_time': False}],
+            package='a_global_path_planner',
+            executable='a_global_path_planner_node',
+            # parameters=[{'use_sim_time': True}],
+            parameters=[{'use_sim_time': False}],
         ),
         Node(
-            package='team_local_goal_creator',
-            executable='team_local_goal_creator_node',
-            parameters=[{'use_sim_time': True}],
-            #  parameters=[{'use_sim_time': False}],
+            package='a_local_goal_creator',
+            executable='a_local_goal_creator_node',
+            # parameters=[{'use_sim_time': True}],
+            parameters=[{'use_sim_time': False}],
         ),
         Node(
-            package='team_local_path_planner',
-            executable='team_local_path_planner_node',
-            parameters=[{'use_sim_time': True}],
-            #  parameters=[{'use_sim_time': False}],
+            package='a_local_path_planner',
+            executable='a_local_path_planner_node',
+            # parameters=[{'use_sim_time': True}],
+            parameters=[{'use_sim_time': False}],
         ),
         
-        Node(
-          package='rviz2',
-          executable='rviz2',
-          arguments=['-d','./src/chibi25_b/local_path_planner/launch/teamb_rviz2_debag.rviz'],  #<-ファイルのある場所を変える必要あり
-          parameters=[{'use_sim_time': True}],
-        ),
+        # Node(
+        #   package='rviz2',
+        #   executable='rviz2',
+        #   arguments=['-d','./src/chibi26_a/team_a/rviz_debag.rviz'],  #<-ファイルのある場所を変える必要あり
+        #   parameters=[{'use_sim_time': True}],
+        # ),
         
 
         LifecycleNode(
@@ -74,13 +74,13 @@ def generate_launch_description():
                 Node(
             package='tf2_ros',
             executable='static_transform_publisher',
-            parameters=[{'use_sim_time': True}],
+            parameters=[{'use_sim_time': False}],
             arguments=['0', '0', '0', '0', '0', '0', '1','/base_link', '/laser'],
         ),
-        ExecuteProcess(
-            cmd=['ros2', 'bag', 'play', '/home/user/ws/bagfiles/team_c/rosbag2_2026_03_11-05_14_01', '--clock'], #<-bagファイルの指定を変える必要あり
-          output='screen'
-        )
+        # ExecuteProcess(
+        #     cmd=['ros2', 'bag', 'play', '/home/user/ws/bag/team_a/rosbag2_2026_03_11-07_12_07', '--clock'], #<-bagファイルの指定を変える必要あり
+        #   output='screen'
+        # )
             ]
         ),
     

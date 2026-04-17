@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(team_obstacle_detector)
+project(a_obstacle_detector)
 
 # find dependencies
 find_package(ament_cmake_auto REQUIRED)
