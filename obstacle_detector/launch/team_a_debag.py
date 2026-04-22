@@ -15,6 +15,7 @@ def generate_launch_description():
             executable='a_obstacle_detector_node',
             # parameters=[{'use_sim_time': True}],
             parameters=[{'use_sim_time': False}],
+            # parameters=['/home/user/ws/src/chibi26_a/obstacle_detector/config/obstacle_detector.yaml', {'use_sim_time': False}],
         ),
         # Node(
         #     package='teamb_local_map_creator',
@@ -26,25 +27,33 @@ def generate_launch_description():
             package='a_localizer',
             executable='a_localizer_node',
             # parameters=[{'use_sim_time': True}],
-            parameters=[{'use_sim_time': False}],
+            # parameters=[{'use_sim_time': False}],
+            parameters=['/home/user/ws/src/chibi26_a/localizer/config/param/localizer.yaml', {'use_sim_time': False}],
+
         ),
         Node(
             package='a_global_path_planner',
             executable='a_global_path_planner_node',
             # parameters=[{'use_sim_time': True}],
             parameters=[{'use_sim_time': False}],
+            # parameters=['/home/user/ws/src/chibi26_a/global_path_planner/config/param/global_path_planner.yaml', {'use_sim_time': False}],
+
         ),
         Node(
             package='a_local_goal_creator',
             executable='a_local_goal_creator_node',
             # parameters=[{'use_sim_time': True}],
             parameters=[{'use_sim_time': False}],
+            # parameters=['/home/user/ws/src/chibi26_a/local_goal_creator/config/param/local_goal_creator.yaml', {'use_sim_time': False}],
+
         ),
         Node(
             package='a_local_path_planner',
             executable='a_local_path_planner_node',
             # parameters=[{'use_sim_time': True}],
-            parameters=[{'use_sim_time': False}],
+            # parameters=[{'use_sim_time': False}],
+            parameters=['/home/user/ws/src/chibi26_a/local_path_planner/config/param/local_path_planner.yaml', {'use_sim_time': False}],
+
         ),
         
         # Node(
@@ -69,7 +78,7 @@ def generate_launch_description():
         ),
 
         TimerAction(
-            period=1.0,  # 秒数は状況に応じて調整（map_serverが準備できるくらい待つ）
+            period=2.0,  # 秒数は状況に応じて調整（map_serverが準備できるくらい待つ）
             actions=[
                 Node(
             package='tf2_ros',

@@ -25,6 +25,10 @@ private:
     double target_distance_;
     bool is_path_ = false;
 
+    // メンバ変数に追加
+    bool is_finished_ = false;       // 全行程終了フラグ
+    double finish_tolerance_ = 0.15; // 最終地点にどのくらい近づいたら止まるか [m]
+
     //　Subscriber
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_sub_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub_;

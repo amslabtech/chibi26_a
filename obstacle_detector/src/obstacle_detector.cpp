@@ -20,6 +20,7 @@ ObstacleDetector::ObstacleDetector()
     std::string robot_frame = this->get_parameter("robot_frame").as_string();
 
     //sub && pub && timer
+    // timer_ = this->create_timer(this->get_clock(), std::chrono::milliseconds(1000 / hz_), std::bind(&ObstacleDetector::process, this));
     timer_ = this->create_wall_timer(std::chrono::milliseconds(1000 / hz_) ,std::bind(&ObstacleDetector::process, this));
     scan_sub_ = this->create_subscription<sensor_msgs::msg::LaserScan>("scan", 10, std::bind(&ObstacleDetector::scan_callback, this, std::placeholders::_1));
     obs_pub_ = this->create_publisher<geometry_msgs::msg::PoseArray>("obstacle_points", 10);
@@ -29,15 +30,14 @@ ObstacleDetector::ObstacleDetector()
 void ObstacleDetector::scan_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
 {
     laser_ = *msg;
+    flag_scan_ = true;
 }
 
 //一定周期で行う処理(obstacle_detectorの処理)
 void ObstacleDetector::process()
 {
     //データがないときはスキップ
-    if(!(laser_.has_value())){
-        return;
-    }
+    if(! flag_scan_) return;
     //scan_obstacle()を呼び出す
     scan_obstacle();  
 }
@@ -49,6 +49,10 @@ void ObstacleDetector::scan_obstacle()
     auto message = geometry_msgs::msg::PoseArray();
     message.header = laser_->header; // 元のScanのヘッダー（時刻やframe_id）をコピー
 
+    if (message.header.frame_id.empty()) {
+        message.header.frame_id = "laser"; // あなたのLiDARのフレーム名に合わせてください
+    }
+
     int step = this->get_parameter("laser_step").as_int();
 
     for(int i = 0; i < (int)laser_->ranges.size(); i += step)
@@ -58,21 +62,6 @@ void ObstacleDetector::scan_obstacle()
         {
             float range = laser_->ranges[i];
             float angle = laser_->angle_min + (i * laser_->angle_increment);
-
-            // 何も当たらなかった方向も「ここまでは道ですよ」と教えるために、最大距離を代入して追加する
-            // if (std::isinf(range) || std::isnan(range)) {
-            //     float max_map_range = 5.0; // マップのサイズに合わせた適切な距離(m)
-            //     geometry_msgs::msg::Pose pose;
-            //     pose.position.x = max_map_range * std::cos(angle);
-            //     pose.position.y = max_map_range * std::sin(angle);
-            //     message.poses.push_back(pose);
-            //     continue;
-            // }
-
-            // --- ここが重要：後方や射程外もカバーする ---
-            // if (std::isinf(range) || std::isnan(range) || range > laser_->range_max) {
-            //     range = 5.0; // マップの端まで白くしたい距離（例: 5m）を指定
-            // }
 
             // 極座標 (range, angle) から直交座標 (x, y) へ変換
             geometry_msgs::msg::Pose pose;
@@ -115,9 +104,14 @@ bool ObstacleDetector::is_ignore_scan(int index)
 
         //左前の柱を無視＜-135度=-2.356rad（-2.4rad ~ -2.0rad）付近＞
         if((angle > -2.4 && angle < -2.0) && range < obs_dist) return true;
-        
-        // return true; 
     }
-    
+    // if((angle > 0.7 && angle < 0.85) && range < obs_dist) return true;
+    //     //右後の柱を無視＜135度=2.356rad（2.2rad ~ 2.4rad）付近＞
+    // if((angle > 2.2 && angle < 2.4) && range < obs_dist) return true;
+    //     //左後の柱を無視＜-45度=-0.785rad（-0.85rad ~ -0.7rad）付近＞
+    // if((angle > -0.85 && angle < -0.7) && range < obs_dist) return true;
+    //     //左前の柱を無視＜-135度=-2.356rad（-2.4rad ~ -2.0rad）付近＞
+    // if((angle > -2.4 && angle < -2.0) && range < obs_dist) return true;
+
     return false;
 }

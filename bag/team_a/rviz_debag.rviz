@@ -117,26 +117,6 @@ Visualization Manager:
         Value: /estimated_pose
       Value: true
     - Alpha: 1
-      Axes Length: 1
-      Axes Radius: 0.10000000149011612
-      Class: rviz_default_plugins/Pose
-      Color: 255; 25; 0
-      Enabled: true
-      Head Length: 0.30000001192092896
-      Head Radius: 0.10000000149011612
-      Name: Pose
-      Shaft Length: 1
-      Shaft Radius: 0.05000000074505806
-      Shape: Arrow
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        Filter size: 10
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /goal_pose
-      Value: true
-    - Alpha: 1
       Class: rviz_default_plugins/PointStamped
       Color: 204; 41; 204
       Enabled: true
@@ -246,25 +226,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 28.58160400390625
+      Distance: 37.73979568481445
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 10.92166805267334
-        Y: 10.720958709716797
-        Z: -8.89954948425293
+        X: 8.855917930603027
+        Y: 5.865330219268799
+        Z: -8.894315719604492
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.5697963237762451
+      Pitch: 1.3997966051101685
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.295397400856018
+      Yaw: 0.040397804230451584
     Saved: ~
 Window Geometry:
   Displays:
@@ -282,5 +262,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 93
-  Y: -11
+  X: 199
+  Y: 60

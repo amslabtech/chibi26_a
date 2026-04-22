@@ -23,6 +23,7 @@ class ObstacleDetector : public rclcpp::Node
         // 変数
         int hz_ = 10; // 制御周期
         double obs_dist = 1.0; // 障害物までの距離
+        bool flag_scan_ = false;
         std::optional<sensor_msgs::msg::LaserScan> laser_;
 
         //Pub & Sub & timer

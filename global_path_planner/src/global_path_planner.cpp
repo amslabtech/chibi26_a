@@ -5,7 +5,7 @@
 using namespace std::chrono_literals;
 
 // デフォルトコンストラクタ
-Astar::Astar() : Node("teamA_path_planner"), clock_(RCL_ROS_TIME)
+Astar::Astar() : Node("a_global_path_planner"), clock_(RCL_ROS_TIME)
 {
     // ###### パラメータの宣言と取得 ######
     this->declare_parameter("margin", 0.3);
@@ -225,7 +225,7 @@ void Astar::show_node_point(const Node_ node)
     if (!test_show_) return;
     geometry_msgs::msg::PointStamped ps;
     ps.header.frame_id = "map";
-    ps.header.stamp = clock_.now();
+    ps.header.stamp = this->now();
     ps.point.x = node.x * resolution_ + origin_x_;
     ps.point.y = node.y * resolution_ + origin_y_;
     pub_node_point_->publish(ps);
@@ -242,13 +242,13 @@ void Astar::show_path(nav_msgs::msg::Path& current_path)
 
 void Astar::show_exe_time()
 {
-    auto duration = clock_.now().seconds() - begin_.seconds();
+    auto duration = this->now().seconds() - begin_.seconds();
     RCLCPP_INFO(this->get_logger(), "Duration = %.2fs", duration);
 }
 
 void Astar::planning()
 {
-    begin_ = clock_.now();
+    begin_ = this->now();
     for (size_t i = 0; i < way_points_x_.size() - 1; ++i) {
         open_list_.clear(); 
         close_list_.clear();

@@ -10,8 +10,8 @@ local_path_planner:
     robot_frame: "base_link"
 
     # 速度制限 [m/s], [rad/s]
-    max_vel1: 0.5            # 平常時の最高速
-    max_vel2: 0.2            # ゴール付近での減速時
+    max_vel1: 0.8            # 平常時の最高速
+    max_vel2: 0.5            # ゴール付近での減速時
     max_vel_y1: 0.3          # メカナム特有：横移動の最高速（コードに追加した変数用）
     max_vel_y2: 0.1          # メカナム特有：減速時の横移動
     min_vel: 0.0             # 後退を許可しないなら0.0
@@ -37,20 +37,20 @@ local_path_planner:
 
     # 時間 [s]
     dt: 0.1                  # 1/hz と合わせる
-    predict_time1: 2.0       # 平常時：2秒先まで予測
+    predict_time1: 1.5       # 平常時：2秒先まで予測
     predict_time2: 1.2       # 減速時：少し短めに予測
 
     # 機体サイズ(半径) [m]
-    roomba_radius: 0.3       # 機体の中心から角までの距離
+    roomba_radius: 0.5       # 機体の中心から角までの距離
     radius_margin1: 0.05     # 安全マージン（平常時）
     radius_margin2: 0.02     # 安全マージン（接近時）
 
     # 重み定数 [-] (合計1.0にする必要はないが、バランスが重要)
-    weight_heading1: 0.6     # ゴールへ向かう力の強さ
+    weight_heading1: 0.3     # ゴールへ向かう力の強さ
     weight_heading2: 0.8     # (減速時)
-    weight_dist1: 0.2        # 障害物を避ける力の強さ
+    weight_dist1: 0.8        # 障害物を避ける力の強さ
     weight_dist2: 0.4        # (減速時)
-    weight_vel: 0.5          # 最高速を維持しようとする力
+    weight_vel: 0.2          # 最高速を維持しようとする力
 
     # 許容誤差 [m]
     goal_tolerance: 0.2
