@@ -120,62 +120,23 @@ Localizer::Localizer() : Node("team_localizer")
 void Localizer::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
 {
     map_ = *msg;
+    flag_map_ = true;
+    RCLCPP_INFO(this->get_logger(), "Map received.");
 
 }
 
 // odometryのコールバック関数
 void Localizer::odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
-    // 初回実行時の処理
-    if (!flag_odom_) {
-        last_odom_ = *msg;
-        flag_odom_ = true;
-        return;
-    }
-
-    //前回からの移動量（差分）を計算
-    // 現在の姿勢 (Quaternion -> Yaw)
-    double curr_yaw = Localizer::get_yaw_from_quat(msg->pose.pose.orientation);
-    double last_yaw = Localizer::get_yaw_from_quat(last_odom_.pose.pose.orientation);
-
-    // 位置の差分（グローバル座標系での差）
-    double dx = msg->pose.pose.position.x - last_odom_.pose.pose.position.x;
-    double dy = msg->pose.pose.position.y - last_odom_.pose.pose.position.y;
-    double dth = curr_yaw - last_yaw;
-
-    // 角度の正規化 (-PI ~ PI)
-    while (dth >  M_PI) dth -= 2.0 * M_PI;
-    while (dth < -M_PI) dth += 2.0 * M_PI;
-
-    //各パーティクルを移動させる
-    double dist = std::sqrt(dx*dx + dy*dy);
-
-    if (dist > move_dist_th_ || std::abs(dth) > 0.05) {
-
-        // 4. OdomModel を使ってノイズを取得し、各パーティクルを移動
-        // (進行方向の角度を計算: ロボット前進方向からの相対角)
-        double relative_direction = std::atan2(dy, dx) - last_yaw;
-
-        // モデルに移動量をセットしてノイズを準備
-        odom_model_.set_dev(dist, dth);
-
-        for (auto& p : particles_) { // メッセージではなく vector<Particle> を回す
-            double fw_noise = odom_model_.get_fw_noise();
-            double rot_noise = odom_model_.get_rot_noise();
-            
-            // Particleクラスの move 関数を呼び出す (p.pose_ は public)
-            p.pose_.move(dist, relative_direction, dth, fw_noise, rot_noise);
-        }
-
-        // 更新したら今回の値を保存
-        last_odom_ = *msg;
-    }
+    prev_odom_ = *msg; 
+    flag_odom_ = true;
 }
 
 // laserのコールバック関数
 void Localizer::laser_callback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
 {
     laser_ = *msg;
+    flag_laser_ = true;
 }
 
 // hz_を返す関数
@@ -212,12 +173,24 @@ void Localizer::initialize()
 // tfのbroadcastと位置推定，パブリッシュを行う
 void Localizer::process()
 {
-    if(flag_odom_)
+    // すべてのデータが揃うまで何もしない
+    if (flag_map_ && flag_laser_ && flag_odom_) 
     {
-        localize();             // 自己位置推定実行
-        broadcast_odom_state(); // TF配信
-        publish_particles();    // パーティクル表示
-        publish_estimated_pose(); // 推定位置パブリッシュ
+        // 1. 移動更新
+        motion_update(); 
+
+        // 2. 観測更新 (内部で scan と map を使用)
+        localize(); 
+
+        // 3. 結果の配信
+        broadcast_odom_state(); 
+        publish_particles(); 
+        publish_estimated_pose();
+
+        // odomとscanは次回の更新のためにフラグを下ろす
+        // mapは一度受け取れば使い回すので true のままでもOK
+        flag_odom_ = false;
+        flag_laser_ = false; 
     }
 
 }
@@ -233,9 +206,9 @@ double Localizer::normalize_angle(double angle)
 // ランダム変数生成関数（正規分布）
 double Localizer::norm_rv(const double mean, const double stddev)
 {
-    static std::mt19937 engine(std::random_device{}());
+    //static std::mt19937 engine(std::random_device{}());
     std::normal_distribution<double> dist(mean, stddev);
-    return dist(engine);
+    return dist(engine_);
 }
 
 // パーティクルの重みの初期化
@@ -302,44 +275,30 @@ void Localizer::localize()
 // ロボットの微小移動量を計算し，パーティクルの位置をノイズを加えて更新
 void Localizer::motion_update()
 {
-    // 1. 前回のオドメトリ受信時からの差分を計算
-    // 現在の姿勢 (Quaternion -> Yaw)
+    // 1. 差分の計算
     double curr_yaw = get_yaw_from_quat(prev_odom_.pose.pose.orientation);
     double last_yaw = get_yaw_from_quat(last_odom_.pose.pose.orientation);
 
-    // 位置の差分（グローバル座標系での単純差分）
     double dx = prev_odom_.pose.pose.position.x - last_odom_.pose.pose.position.x;
     double dy = prev_odom_.pose.pose.position.y - last_odom_.pose.pose.position.y;
     double dth = normalize_angle(curr_yaw - last_yaw);
-
-    // 2. 移動距離の計算
     double dist = std::sqrt(dx * dx + dy * dy);
 
-    // 3. 一定以上の移動があった場合のみパーティクルを更新（計算負荷軽減）
+    // 2. 閾値チェック
     if (dist > move_dist_th_ || std::abs(dth) > move_angle_th_) 
     {
-        // オドメトリモデルに現在の移動量をセットして、ノイズの標準偏差を計算
         odom_model_.set_dev(dist, dth);
 
-        // 各パーティクルを移動させる
         for (auto& p : particles_) 
         {
-            // odom_modelから生成したノイズを取得
-            double fw_noise = odom_model_.get_fw_noise();
-            double rot_noise = odom_model_.get_rot_noise();
-
-            // パーティクルの持つ Pose クラスの move 関数を呼び出す
-            // dx, dy から移動の方向 (atan2) を算出
-            double move_direction = std::atan2(dy, dx);
+            // パーティクル自身の向き(p.pose_.yaw())を基準にするのが重要
+            double relative_direction = normalize_angle(std::atan2(dy, dx) - p.pose_.yaw());
             
-            // 注意: move_direction は global 座標系での移動方向。
-            // パーティクルの現在の向き (p.yaw) との相対角にする必要がある場合は調整
-            double relative_direction = normalize_angle(move_direction - last_yaw);
-
-            p.pose_.move(dist, relative_direction, dth, fw_noise, rot_noise);
+            p.pose_.move(dist, relative_direction, dth, 
+                         odom_model_.get_fw_noise(), odom_model_.get_rot_noise());
         }
 
-        // 今回のオドメトリを「前回の値」として保存
+        // 3. 更新の確定：ここで last_odom_ を更新する
         last_odom_ = prev_odom_;
     }
 }
@@ -369,8 +328,11 @@ void Localizer::observation_update()
     // 推定位置の決定
     estimate_pose();
 
+    // リサンプリングの前に、自己位置を見失っていないかチェックして必要なら膨張リセット
+    expansion_resetting();
+
     // リサンプリング（周辺尤度 alpha を計算して渡す）
-    double alpha = total_weight / particles_.size();
+    double alpha = calc_marginal_likelihood();
     resampling(alpha);
 }
 
@@ -434,17 +396,16 @@ void Localizer::expansion_resetting()
     // 周辺尤度（平均尤度）を計算
     double alpha = calc_marginal_likelihood();
 
-    // しきい値（例: 0.01）を下回った場合にリセット発動
-    // ※しきい値は環境やセンサー精度に合わせて調整が必要
+    // しきい値を下回った場合にリセット発動
     if (alpha < expansion_threshold_) 
     {
         RCLCPP_WARN(this->get_logger(), "Expansion Resetting Triggered! (alpha: %f)", alpha);
 
         for (auto& p : particles_) {
-            // 現在の推定位置を中心に、通常より大きなノイズを加えて再配置
-            double px = norm_rv(estimated_pose_.x(), 0.5); // 標準偏差 50cm
-            double py = norm_rv(estimated_pose_.y(), 0.5);
-            double pyaw = norm_rv(estimated_pose_.yaw(), 0.3); // 約17度
+            // 直書きされていた数値を、宣言済みのパラメータ変数に置き換え
+            double px = norm_rv(estimated_pose_.x(), expansion_x_dev_); 
+            double py = norm_rv(estimated_pose_.y(), expansion_y_dev_);
+            double pyaw = norm_rv(estimated_pose_.yaw(), expansion_yaw_dev_);
 
             p.pose_.set(px, py, pyaw);
         }

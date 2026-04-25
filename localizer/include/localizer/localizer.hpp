@@ -125,7 +125,8 @@ class Localizer : public rclcpp::Node
 
         // 正規分布用乱数
         std::random_device seed_gen_;
-        std::default_random_engine engine_;
+        //std::default_random_engine engine_;
+        std::mt19937 engine_;
 
         // 各種オブジェクト
         nav_msgs::msg::OccupancyGrid    map_;                // map_serverから受け取るマップ

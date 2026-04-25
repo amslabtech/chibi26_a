@@ -1,1 +1,9 @@
 bag/
+
+# Windows Zone.Identifier files
+*:Zone.Identifier
+
+# ROS 2 build artifacts
+install/
+build/
+log/
