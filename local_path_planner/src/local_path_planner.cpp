@@ -93,7 +93,7 @@ void DWAPlanner::process()
     // 修正：frame_id が空なら変換処理そのものをスキップする
     try {
         // goal_msg_ など、受信した元のメッセージをメンバ変数に保存しておく必要があります
-        auto transform = tf_buffer_->lookupTransform("base_link", goal_msg_.header.frame_id,/*"map",*/ tf2::TimePointZero);
+        auto transform = tf_buffer_->lookupTransform("base_link", goal_msg_.header.frame_id, tf2::TimePointZero, tf2::durationFromSec(0.01));
         // local_goal_original_ は map座標系の PointStamped
         tf2::doTransform(goal_msg_, local_goal_, transform); 
     } catch (tf2::TransformException &ex) {
@@ -106,6 +106,7 @@ void DWAPlanner::process()
             // 障害物データの frame_id から base_link への変換を取得
             auto trans_obs = tf_buffer_->lookupTransform("base_link", obs_poses_.header.frame_id, tf2::TimePointZero);
             geometry_msgs::msg::PoseArray transformed_obs;
+            
             for (auto& p_in : obs_poses_.poses) {
                 geometry_msgs::msg::Pose p_out;
                 // 座標変換の適用（簡易的な実装例）
@@ -126,7 +127,7 @@ void DWAPlanner::process()
         if (input[0] == 0.0 && std::abs(input[2]) < 0.01) {
             RCLCPP_WARN(this->get_logger(), "No Safe Path!");
         }
-
+        RCLCPP_INFO_THROTTLE(this->get_logger(), clock_, 500, "Best Input: vx=%f, vy=%f, w=%f", input[0], input[1], input[2]);
         send_velocity(input[0], input[1], input[2]);
     } else {
         RCLCPP_INFO_THROTTLE(this->get_logger(), clock_, 2000, "Goal Reached. Stopping...");
@@ -266,9 +267,9 @@ std::vector<State> DWAPlanner::calc_traj(double vx, double vy, double yawrate) {
 }
 
 void DWAPlanner::move(State& s, double vx, double vy, double yawrate) {
-    s.yaw += yawrate * dt_;
     s.x += (vx * std::cos(s.yaw) - vy * std::sin(s.yaw)) * dt_;
     s.y += (vx * std::sin(s.yaw) + vy * std::cos(s.yaw)) * dt_;
+    s.yaw += yawrate * dt_;
 }
 
 double DWAPlanner::normalize_angle(double angle)
@@ -304,8 +305,8 @@ double DWAPlanner::calc_dist_eval(const std::vector<State>& traj) {
     for (const auto& s : traj) {
         for (const auto& obs : obs_poses_.poses) {
             double d1 = std::hypot(s.x - obs.position.x, s.y - obs.position.y);
-            double d = std::hypot(obs.position.x, obs.position.y);
-            if (d < 0.1) continue;
+            // double d = std::hypot(obs.position.x, obs.position.y);
+            // if (d < 0.1) continue;
             if (d1 < robot_radius_) return -1e6;
             min_dist = std::min(min_dist, d1);
         }

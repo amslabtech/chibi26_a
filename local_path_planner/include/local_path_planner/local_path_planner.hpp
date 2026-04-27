@@ -61,7 +61,7 @@ private:
     // その他の関数
     void   send_velocity(double vx, double vy, double yawrate);
     void   move(State& state, double vx, double vy, double yawrate);
-    void   visualize_traj(const std::vector<State>& traj, rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub_local_path, rclcpp::Time now);
+    // void   visualize_traj(const std::vector<State>& traj, rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub_local_path, rclcpp::Time now);
     double normalize_angle(double angle);
     double calc_evaluation(const std::vector<State>& traj);
     double calc_heading_eval(const std::vector<State>& traj);

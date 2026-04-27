@@ -35,10 +35,14 @@ void OdomModel::set_dev(const double length, const double angle)
     double l = std::abs(length);
     double a = std::abs(angle);
 
-    // 分散 = (直進による誤差) + (回転による誤差)
-    // 分散から標準偏差 (sqrt) を求める
-    fw_dev_  = std::sqrt(l * fw_var_per_fw_  + a * fw_var_per_rot_);
-    rot_dev_ = std::sqrt(l * rot_var_per_fw_ + a * rot_var_per_rot_);
+    // 各係数(ff, fr, rf, rr)を二乗して分散係数として扱う
+    // 分散 = (直進移動量 * 直進分散係数) + (回転移動量 * 回転分散係数)
+    double fw_variance  = l * std::pow(fw_var_per_fw_, 2) + a * std::pow(fw_var_per_rot_, 2);
+    double rot_variance = l * std::pow(rot_var_per_fw_, 2) + a * std::pow(rot_var_per_rot_, 2);
+
+    // 分散から今回の移動における標準偏差を求める
+    fw_dev_  = std::sqrt(fw_variance);
+    rot_dev_ = std::sqrt(rot_variance);
 }
 
 // 直進に関するノイズ（fw_dev_）の取得

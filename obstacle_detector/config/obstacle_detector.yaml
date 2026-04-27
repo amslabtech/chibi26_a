@@ -1,5 +1,5 @@
 b_obstacle_detector:
-ros_parameters:
+ros__parameters:
 
 hz: 10                   # ループ周期 [Hz]
 laser_step: 1            # 何本ずつレーザを見るか(全1080本)

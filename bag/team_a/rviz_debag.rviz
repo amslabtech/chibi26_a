@@ -180,6 +180,48 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /optimal_path
       Value: true
+    - Alpha: 1
+      Arrow Length: 0.30000001192092896
+      Axes Length: 0.30000001192092896
+      Axes Radius: 0.009999999776482582
+      Class: rviz_default_plugins/PoseArray
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.07000000029802322
+      Head Radius: 0.029999999329447746
+      Name: PoseArray
+      Shaft Length: 0.23000000417232513
+      Shaft Radius: 0.009999999776482582
+      Shape: Arrow (Flat)
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /particle_cloud
+      Value: true
+    - Alpha: 1
+      Arrow Length: 0.30000001192092896
+      Axes Length: 0.30000001192092896
+      Axes Radius: 0.009999999776482582
+      Class: rviz_default_plugins/PoseArray
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.07000000029802322
+      Head Radius: 0.029999999329447746
+      Name: PoseArray
+      Shaft Length: 0.23000000417232513
+      Shaft Radius: 0.009999999776482582
+      Shape: Arrow (Flat)
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /obstacle_points
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -226,25 +268,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 37.73979568481445
+      Distance: 19.629697799682617
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 8.855917930603027
-        Y: 5.865330219268799
-        Z: -8.894315719604492
+        X: 14.841957092285156
+        Y: 5.178144454956055
+        Z: -10.04702377319336
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.3997966051101685
+      Pitch: 1.4247965812683105
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.040397804230451584
+      Yaw: 0.2003977745771408
     Saved: ~
 Window Geometry:
   Displays:
@@ -262,5 +304,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 199
-  Y: 60
+  X: 167
+  Y: 28

@@ -17,7 +17,7 @@ ObstacleDetector::ObstacleDetector()
     hz_ = this->get_parameter("hz").as_int();
     obs_dist = this->get_parameter("ignore_dist").as_double();
     int laser_step = this->get_parameter("laser_step").as_int();
-    std::string robot_frame = this->get_parameter("robot_frame").as_string();
+    robot_frame = this->get_parameter("robot_frame").as_string();
 
     //sub && pub && timer
     // timer_ = this->create_timer(this->get_clock(), std::chrono::milliseconds(1000 / hz_), std::bind(&ObstacleDetector::process, this));
@@ -42,16 +42,15 @@ void ObstacleDetector::process()
     scan_obstacle();  
 }
 
-//Lidarから障害物情報を取得し，障害物の座標をpublish　※メッセージの型は自分で決めてください
+//Lidarから障害物情報を取得し，障害物の座標をpublish
 void ObstacleDetector::scan_obstacle()
 {
     // 送信用の PoseArray メッセージを作成
     auto message = geometry_msgs::msg::PoseArray();
     message.header = laser_->header; // 元のScanのヘッダー（時刻やframe_id）をコピー
-
-    if (message.header.frame_id.empty()) {
-        message.header.frame_id = "laser"; // あなたのLiDARのフレーム名に合わせてください
-    }
+    // if (message.header.frame_id.empty()) {
+    //     message.header.frame_id = robot_frame;
+    // }
 
     int step = this->get_parameter("laser_step").as_int();
 
