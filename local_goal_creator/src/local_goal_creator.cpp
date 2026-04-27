@@ -11,7 +11,7 @@ LocalGoalCreator::LocalGoalCreator() : Node("LocalGoalCreator")
     hz_ = 10; //周期
     index_step_ = 1; //1回で更新するインデックス数
     goal_index_ = 0; //グローバルパス内におけるローカルゴールのインデックス
-    target_distance_ = 0.3; // ローカルゴールとする前方距離 [m]
+    target_distance_ = 0.8; // ローカルゴールとする前方距離 [m]
     is_path_ = false;
 
     // Subscriberの定義
@@ -19,7 +19,7 @@ LocalGoalCreator::LocalGoalCreator() : Node("LocalGoalCreator")
         "/global_path", 10, std::bind(&LocalGoalCreator::pathCallback, this, std::placeholders::_1));
     
     pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-        "/current_pose", 10, std::bind(&LocalGoalCreator::poseCallback, this, std::placeholders::_1));
+        "/estimated_pose", 10, std::bind(&LocalGoalCreator::poseCallback, this, std::placeholders::_1));
 
     // Publisherの定義
     local_goal_pub_ = this->create_publisher<geometry_msgs::msg::PointStamped>("local_goal", 10);
@@ -65,8 +65,8 @@ void LocalGoalCreator::publishGoal()
     //設定値に応じて，ゴール位置の変更を行う
     // 現在のgoal_indexから先のパスを探索
 
-    pose_.pose.position.x = 0.0;
-    pose_.pose.position.y = 0.0;
+    //pose_.pose.position.x = 0.0;
+    //pose_.pose.position.y = 0.0;
 
     // 1. 現在のゴール(goal_index_)とロボットの距離を計算
     double dist_to_goal = getDistance();
