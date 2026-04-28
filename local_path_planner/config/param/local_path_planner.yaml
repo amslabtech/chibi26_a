@@ -41,7 +41,7 @@ local_path_planner:
     predict_time2: 1.2       # 減速時：少し短めに予測
 
     # 機体サイズ(半径) [m]
-    roomba_radius: 0.5       # 機体の中心から角までの距離
+    roomba_radius: 0.4       # 機体の中心から角までの距離
     radius_margin1: 0.05     # 安全マージン（平常時）
     radius_margin2: 0.02     # 安全マージン（接近時）
 

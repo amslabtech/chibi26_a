@@ -22,7 +22,7 @@ DWAPlanner::DWAPlanner() : Node("local_path_planner"), clock_(RCL_ROS_TIME)
     this->declare_parameter("weight_heading", 0.2);
     this->declare_parameter("weight_dist", 0.5);
     this->declare_parameter("weight_vel", 0.3);
-    this->declare_parameter("roomba_radius", 0.5);
+    this->declare_parameter("roomba_radius", 0.4);
     this->declare_parameter("vel_reso", 0.01);
     this->declare_parameter("yawrate_reso", 0.05);
     this->declare_parameter("search_range", 3.0);
@@ -99,13 +99,12 @@ void DWAPlanner::process()
     } catch (tf2::TransformException &ex) {
         return; // TFが引けないときは処理しない
     }
-
+    geometry_msgs::msg::PoseArray transformed_obs;
 // process() 内で、障害物も base_link に変換する
     if (flag_obs_poses_) {
         try {
             // 障害物データの frame_id から base_link への変換を取得
             auto trans_obs = tf_buffer_->lookupTransform("base_link", obs_poses_.header.frame_id, tf2::TimePointZero);
-            geometry_msgs::msg::PoseArray transformed_obs;
             
             for (auto& p_in : obs_poses_.poses) {
                 geometry_msgs::msg::Pose p_out;
@@ -113,15 +112,16 @@ void DWAPlanner::process()
                 tf2::doTransform(p_in, p_out, trans_obs);
                 transformed_obs.poses.push_back(p_out);
             }
-            obs_poses_ = transformed_obs; // 変換後の座標で上書き
+            // obs_poses_ = transformed_obs; // 変換後の座標で上書き
         } catch (tf2::TransformException &ex) {
             RCLCPP_WARN(this->get_logger(), "TF Error (obs): %s", ex.what());
+            return;
         }
     }
 
     if (can_move()) {
         change_mode();
-        std::vector<double> input = calc_final_input();
+        std::vector<double> input = calc_final_input(transformed_obs);
         
         // もし全経路が衝突判定なら強制停止
         if (input[0] == 0.0 && std::abs(input[2]) < 0.01) {
@@ -179,7 +179,7 @@ void DWAPlanner::send_velocity(double vx, double vy, double yawrate)
     velocity_pub_->publish(msg);
 }
 
-std::vector<double> DWAPlanner::calc_final_input()
+std::vector<double> DWAPlanner::calc_final_input(const geometry_msgs::msg::PoseArray& current_obs)
 {
     std::vector<double> best_input{0.0, 0.0};          
     double max_score = -1e6;                      
@@ -192,7 +192,7 @@ std::vector<double> DWAPlanner::calc_final_input()
         for (double vy = dw_.min_vy; vy <= dw_.max_vy; vy += vy_reso_) {
             for (double w = dw_.min_yawrate; w <= dw_.max_yawrate; w += yawrate_reso_) {
                 auto traj = calc_traj(vx, vy, w);
-                double score = calc_evaluation(traj);
+                double score = calc_evaluation(traj, current_obs);
 
                 if (vx > 0.1 && std::abs(w) < 0.01 && std::abs(vy) < 0.01) {
                     RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, 
@@ -280,9 +280,9 @@ double DWAPlanner::normalize_angle(double angle)
 }
 
 
-double DWAPlanner::calc_evaluation(const std::vector<State>& traj) {
+double DWAPlanner::calc_evaluation(const std::vector<State>& traj, const geometry_msgs::msg::PoseArray& current_obs) {
     return weight_heading_ * calc_heading_eval(traj) +
-           weight_dist_ * calc_dist_eval(traj) +
+           weight_dist_ * calc_dist_eval(traj, current_obs) +
            weight_vel_ * calc_vel_eval(traj);
 }
 
@@ -300,14 +300,14 @@ double DWAPlanner::calc_heading_eval(const std::vector<State>& traj) {
     // ###################
 }
 
-double DWAPlanner::calc_dist_eval(const std::vector<State>& traj) {
+double DWAPlanner::calc_dist_eval(const std::vector<State>& traj, const geometry_msgs::msg::PoseArray& obs_list) {
     double min_dist = search_range_;
     for (const auto& s : traj) {
-        for (const auto& obs : obs_poses_.poses) {
+        for (const auto& obs : obs_list.poses) {
             double d1 = std::hypot(s.x - obs.position.x, s.y - obs.position.y);
             // double d = std::hypot(obs.position.x, obs.position.y);
             // if (d < 0.1) continue;
-            if (d1 < robot_radius_) return -1e6;
+            if (d1 < robot_radius_) return -100;//-1e6
             min_dist = std::min(min_dist, d1);
         }
     }

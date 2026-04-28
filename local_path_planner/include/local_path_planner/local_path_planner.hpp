@@ -63,16 +63,16 @@ private:
     void   move(State& state, double vx, double vy, double yawrate);
     // void   visualize_traj(const std::vector<State>& traj, rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub_local_path, rclcpp::Time now);
     double normalize_angle(double angle);
-    double calc_evaluation(const std::vector<State>& traj);
+    double calc_evaluation(const std::vector<State>& traj, const geometry_msgs::msg::PoseArray& current_obs);
     double calc_heading_eval(const std::vector<State>& traj);
-    double calc_dist_eval(const std::vector<State>& traj);
+    double calc_dist_eval(const std::vector<State>& traj, const geometry_msgs::msg::PoseArray& obs_list);
     double calc_vel_eval(const std::vector<State>& traj);
     std::vector<State> calc_traj(double vx, double vy, double yawrate);
 
     void calc_dynamic_window();
     void change_mode();
     bool can_move();
-    std::vector<double> calc_final_input();
+    std::vector<double> calc_final_input(const geometry_msgs::msg::PoseArray& current_obs);
     void visualize_traj(const std::vector<State>& traj, rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub);
 
     // ----- パラメータ（変数はそのまま維持） -----
