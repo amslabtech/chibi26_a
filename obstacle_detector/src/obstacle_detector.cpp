@@ -87,30 +87,32 @@ bool ObstacleDetector::is_ignore_scan(int index)
 
     // 現在のインデックスの角度を計算 (rad)
     float angle = laser_->angle_min + (index * laser_->angle_increment);
-
+    // float angle_margin = 0.0611;//3.5°
+    float angle_margin = 0.15;
     // 柱を無視する（角度 ＋ 距離の条件を追加）
-    // float ignore_dist = 0.81; // 柱があると思われる最大距離<-yamlファイルからobs_distとして入力している
+    // if(range < obs_dist) { 
+    //     //右前の柱を無視＜45度=0.785rad（0.7rad ~ 0.85rad）付近＞
+    //     if(angle > (0.7 - angle_margin) && angle < (0.85 + angle_margin)) return true;
 
-    if(range < obs_dist) { 
-        //右前の柱を無視＜45度=0.785rad（0.7rad ~ 0.85rad）付近＞
-        if((angle > 0.7 && angle < 0.85) && range < obs_dist) return true;
-
-        //右後の柱を無視＜135度=2.356rad（2.2rad ~ 2.4rad）付近＞
-        if((angle > 2.2 && angle < 2.4) && range < obs_dist) return true;
-
-        //左後の柱を無視＜-45度=-0.785rad（-0.85rad ~ -0.7rad）付近＞
-        if((angle > -0.85 && angle < -0.7) && range < obs_dist) return true;
-
-        //左前の柱を無視＜-135度=-2.356rad（-2.4rad ~ -2.0rad）付近＞
-        if((angle > -2.4 && angle < -2.0) && range < obs_dist) return true;
-    }
-    // if((angle > 0.7 && angle < 0.85) && range < obs_dist) return true;
     //     //右後の柱を無視＜135度=2.356rad（2.2rad ~ 2.4rad）付近＞
-    // if((angle > 2.2 && angle < 2.4) && range < obs_dist) return true;
+    //     if(angle > (2.2 - angle_margin) && angle < (2.4 + angle_margin)) return true;
+
     //     //左後の柱を無視＜-45度=-0.785rad（-0.85rad ~ -0.7rad）付近＞
-    // if((angle > -0.85 && angle < -0.7) && range < obs_dist) return true;
+    //     if(angle > (-0.85 - angle_margin) && angle < (-0.7 + angle_margin)) return true;
+
     //     //左前の柱を無視＜-135度=-2.356rad（-2.4rad ~ -2.0rad）付近＞
-    // if((angle > -2.4 && angle < -2.0) && range < obs_dist) return true;
+    //     if(angle > (-2.4 - angle_margin) && angle < (-2.0 + angle_margin)) return true;
+
+    //     return true;
+    // }
+
+    if(angle > (0.7 - angle_margin) && angle < (0.85 + angle_margin)) return true;
+        //右後の柱を無視＜135度=2.356rad（2.2rad ~ 2.4rad）付近＞
+    if(angle > (2.2 - angle_margin) && angle < (2.4 + angle_margin)) return true;
+        //左後の柱を無視＜-45度=-0.785rad（-0.85rad ~ -0.7rad）付近＞
+    if(angle > (-0.85 - angle_margin) && angle < (-0.7 + angle_margin)) return true;
+        //左前の柱を無視＜-135度=-2.356rad（-2.4rad ~ -2.0rad）付近＞
+    if(angle > (-2.4 - angle_margin) && angle < (-2.0 + angle_margin)) return true;
 
     return false;
 }

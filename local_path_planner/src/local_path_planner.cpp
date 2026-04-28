@@ -19,10 +19,11 @@ DWAPlanner::DWAPlanner() : Node("local_path_planner"), clock_(RCL_ROS_TIME)
     this->declare_parameter("predict_time1", 1.5);
     this->declare_parameter("predict_time2", 1.2);
     this->declare_parameter("goal_tolerance", 0.2);
-    this->declare_parameter("weight_heading", 0.2);
-    this->declare_parameter("weight_dist", 0.5);
+    this->declare_parameter("weight_heading1", 0.2);
+    this->declare_parameter("weight_dist1", 0.5);
     this->declare_parameter("weight_vel", 0.3);
     this->declare_parameter("roomba_radius", 0.4);
+    this->declare_parameter("radius_margin1", 0.2);
     this->declare_parameter("vel_reso", 0.01);
     this->declare_parameter("yawrate_reso", 0.05);
     this->declare_parameter("search_range", 3.0);
@@ -38,14 +39,15 @@ DWAPlanner::DWAPlanner() : Node("local_path_planner"), clock_(RCL_ROS_TIME)
     vy_reso_ = v_reso_ * 2.0;
     yawrate_reso_ = this->get_parameter("yawrate_reso").as_double();
     robot_radius_ = this->get_parameter("roomba_radius").as_double();
+    radius_margin1_ = this->get_parameter("radius_margin1").as_double();
     search_range_ = this->get_parameter("search_range").as_double();
     max_yawrate1_ = this->get_parameter("max_yawrate1").as_double();
     max_yawrate2_ = this->get_parameter("max_yawrate2").as_double();
     predict_time1_ = this->get_parameter("predict_time1").as_double();
     predict_time2_ = this->get_parameter("predict_time2").as_double();
     goal_tolerance_ = this->get_parameter("goal_tolerance").as_double();
-    weight_heading1_ = this->get_parameter("weight_heading").as_double();
-    weight_dist1_ = this->get_parameter("weight_dist").as_double();
+    weight_heading1_ = this->get_parameter("weight_heading1").as_double();
+    weight_dist1_ = this->get_parameter("weight_dist1").as_double();
     weight_vel_ = this->get_parameter("weight_vel").as_double();
 
     // 初期モード設定
@@ -195,8 +197,8 @@ std::vector<double> DWAPlanner::calc_final_input(const geometry_msgs::msg::PoseA
                 double score = calc_evaluation(traj, current_obs);
 
                 if (vx > 0.1 && std::abs(w) < 0.01 && std::abs(vy) < 0.01) {
-                    RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, 
-                        "--- Straight Candidate --- vx: %f, score: %f", vx, score);
+                    // RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, 
+                    //     "--- Straight Candidate --- vx: %f, score: %f", vx, score);
                 }
 
                 if (score > max_score) {
@@ -307,7 +309,7 @@ double DWAPlanner::calc_dist_eval(const std::vector<State>& traj, const geometry
             double d1 = std::hypot(s.x - obs.position.x, s.y - obs.position.y);
             // double d = std::hypot(obs.position.x, obs.position.y);
             // if (d < 0.1) continue;
-            if (d1 < robot_radius_) return -100;//-1e6
+            if (d1 < robot_radius_ + radius_margin1_) return -1e6;//-1e6
             min_dist = std::min(min_dist, d1);
         }
     }

@@ -42,7 +42,7 @@ local_path_planner:
 
     # 機体サイズ(半径) [m]
     roomba_radius: 0.4       # 機体の中心から角までの距離
-    radius_margin1: 0.05     # 安全マージン（平常時）
+    radius_margin1: 0.15     # 安全マージン（平常時）
     radius_margin2: 0.02     # 安全マージン（接近時）
 
     # 重み定数 [-] (合計1.0にする必要はないが、バランスが重要)

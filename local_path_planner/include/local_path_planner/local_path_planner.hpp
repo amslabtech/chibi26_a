@@ -82,7 +82,7 @@ private:
     double min_vel_, max_yawrate_, max_yawrate1_, max_yawrate2_;
     double max_accel_, max_dyawrate_, v_reso_, vy_reso_, yawrate_reso_;
     double dt_, predict_time_, predict_time1_, predict_time2_;
-    double robot_radius_;
+    double robot_radius_, radius_margin1_;
     double goal_tolerance_, search_range_;
 
     bool flag_local_goal_ = false;
