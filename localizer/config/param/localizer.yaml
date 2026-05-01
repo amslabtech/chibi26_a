@@ -17,8 +17,9 @@ team_localizer:
     init_yaw_dev: 0.5 # 初期姿勢の標準偏差 [rad]
 
     # リセット関連
-    alpha_th: 0.0017        # リセットに関する平均尤度の閾値 [-]
-    reset_count_limit: 5    # 連続リセットの回数の上限 [-]
+    alpha_th: 0.00005        # リセットに関する平均尤度の閾値 [-]
+    reset_count_limit: 215    # 連続リセットの回数の上限 [-]
+    expansion_threshold: 0.00005
     expansion_x_dev: 0.05   # 膨張リセットの位置xの標準偏差 [m]
     expansion_y_dev: 0.05   # 膨張リセットの位置yの標準偏差 [m]
     expansion_yaw_dev: 0.01 # 膨張リセットの姿勢の標準偏差 [rad]
@@ -47,5 +48,5 @@ team_localizer:
     # ===== クラスOdomModel =====
     ff: 0.17   # 直進1[m]で生じる道のりのばらつきの標準偏差 [m]
     fr: 0.0005 # 回転1[rad]で生じる道のりのばらつきの標準偏差 [m]
-    rf: 0.13   # 直進1[m]で生じる向きのばらつきの標準偏差 [rad]
-    rr: 0.2    # 回転1[rad]で生じる向きのばらつきの標準偏差 [rad]
+    rf: 0.04   # 直進1[m]で生じる向きのばらつきの標準偏差 [rad]
+    rr: 0.06    # 回転1[rad]で生じる向きのばらつきの標準偏差 [rad]

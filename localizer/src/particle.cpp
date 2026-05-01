@@ -94,10 +94,12 @@ bool Particle::is_ignore_angle(double angle, const std::vector<double>& ignore_a
 // 与えられた座標と角度の方向にある壁までの距離を算出
 // マップデータが100の場合，距離を返す
 // マップデータが-1（未知）の場合，マップ範囲外の場合はsearch_limit * 2.0を返す
-// いずれでもない場合は，search_limit * 5.0を返す
+// いずれでもない場合は，search_limitを返す
 double Particle::calc_dist_to_wall(double x, double y, const double laser_angle, const nav_msgs::msg::OccupancyGrid& map,
         const double laser_range, const double sensor_noise_ratio)
 {
+        (void)sensor_noise_ratio;
+
         // 探索のステップサイズ
         const double search_step = map.info.resolution;
         // 最大探索距離
@@ -106,33 +108,33 @@ double Particle::calc_dist_to_wall(double x, double y, const double laser_angle,
         // 探索
         for(double dist=0.0; dist<search_limit; dist+=search_step)
         {
-                // 現在の探索地点の座標を計算
                 double nx = x + dist * std::cos(laser_angle);
                 double ny = y + dist * std::sin(laser_angle);
 
-                // 座標をグリッドインデックスに変換
-                int index = xy_to_grid_index(nx, ny, map.info);
+                double relative_x = nx - map.info.origin.position.x;
+                double relative_y = ny - map.info.origin.position.y;
 
-                // 1. 地図の範囲外チェック
-                if (!in_map(index, map.data.size())) {
-                        return search_limit * 2.0; // 範囲外ペナルティ
+                int grid_x = static_cast<int>(std::floor(relative_x / map.info.resolution));
+                int grid_y = static_cast<int>(std::floor(relative_y / map.info.resolution));
+
+                if (!in_map_cell(grid_x, grid_y, map.info)) {
+                        return search_limit * 2.0;
                 }
 
-                // 2. 地図の状態をチェック
+                int index = grid_y * static_cast<int>(map.info.width) + grid_x;
+
                 int8_t cell_value = map.data[index];
 
                 if (cell_value == 100) {
-                // 壁にヒット！その時の距離を返す
                         return dist;
-                } 
+                }
                 else if (cell_value == -1) {
-                // 未知の領域にヒット
-                        return search_limit * 2.0; // 未知領域ペナルティ
+                        return search_limit * 2.0;      
                 }
 
         }
         
-        return search_limit * sensor_noise_ratio * 5.0;
+        return search_limit;
 }
 
 // 座標からグリッドのインデックスを返す
@@ -157,6 +159,14 @@ int Particle::xy_to_grid_index(const double x, const double y, const nav_msgs::m
         return grid_y * map_info.width + grid_x;
 }
 
+bool Particle::in_map_cell(int grid_x, int grid_y, const nav_msgs::msg::MapMetaData& map_info)
+{
+    return grid_x >= 0 &&
+           grid_x < static_cast<int>(map_info.width) &&
+           grid_y >= 0 &&
+           grid_y < static_cast<int>(map_info.height);
+}
+
 // マップ内か判定
 bool Particle::in_map(const int grid_index, const int map_data_size)
 {
@@ -167,15 +177,7 @@ bool Particle::in_map(const int grid_index, const int map_data_size)
 // 確率密度関数（正規分布）
 double Particle::norm_pdf(const double x, const double mean, const double stddev)
 {
-        // 分散 (sigma^2)
-        double var = stddev * stddev;
-        
-        // 指数部の計算: -(x - mu)^2 / (2 * sigma^2)
-        double exponent = -std::pow(x - mean, 2) / (2.0 * var);
-        
-        // 係数部の計算: 1 / sqrt(2 * pi * sigma^2)
-        double coefficient = 1.0 / std::sqrt(2.0 * M_PI * var);
-        
-        // 正規分布の公式を適用
-        return coefficient * std::exp(exponent);
+        double std = std::max(stddev, 1e-6);
+        double diff = x - mean;
+        return std::exp(-(diff * diff) / (2.0 * std * std));
 }

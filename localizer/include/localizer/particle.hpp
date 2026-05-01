@@ -2,6 +2,7 @@
 #define PARTICLE_HPP
 
 #include <nav_msgs/msg/occupancy_grid.hpp>
+#include <nav_msgs/msg/map_meta_data.hpp>
 #include <sensor_msgs/msg/laser_scan.hpp>
 #include "localizer/pose.hpp"
 
@@ -36,6 +37,8 @@ class Particle
 
         // マップ内か判断
         bool in_map(const int grid_index, const int map_data_size);
+
+        bool in_map_cell(int grid_x, int grid_y, const nav_msgs::msg::MapMetaData& map_info);
 
         // 確率密度関数（正規分布）
         double norm_pdf(const double x, const double mean, const double stddev);

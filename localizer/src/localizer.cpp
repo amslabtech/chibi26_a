@@ -1,82 +1,49 @@
 #include "localizer/localizer.hpp"
 
-// デフォルトコンストラクタ
+// コンストラクタ
 Localizer::Localizer() : Node("team_localizer")
 { 
     // ----- パラメータの宣言と取得 -----
 
     // 1. 基本設定
-    this->declare_parameter("hz", 10);
-    this->declare_parameter("max_particle_num", 500);
-    this->declare_parameter("min_particle_num", 100);
-    this->declare_parameter("move_dist_th", 0.05);
-    this->declare_parameter("move_angle_th", 0.05);
+    hz_ = this->declare_parameter("hz", 10);
+    max_particle_num_ = this->declare_parameter("max_particle_num", 500);
+    min_particle_num_ = this->declare_parameter("min_particle_num", 100);
+    move_dist_th_ = this->declare_parameter("move_dist_th", 0.05);
+    move_angle_th_ = this->declare_parameter("move_angle_th", 0.05);
 
-    this->get_parameter("hz", hz_);
-    this->get_parameter("max_particle_num", max_particle_num_);
-    this->get_parameter("min_particle_num", min_particle_num_);
-    this->get_parameter("move_dist_th", move_dist_th_);
-    this->get_parameter("move_angle_th", move_angle_th_);
-
-    // 2. 初期ポーズ関連
-    this->declare_parameter("init_x", 0.0);
-    this->declare_parameter("init_y", 0.0);
-    this->declare_parameter("init_yaw", 0.0);
-    this->declare_parameter("init_x_dev", 0.1);
-    this->declare_parameter("init_y_dev", 0.1);
-    this->declare_parameter("init_yaw_dev", 0.05);
-
-    this->get_parameter("init_x", init_x_);
-    this->get_parameter("init_y", init_y_);
-    this->get_parameter("init_yaw", init_yaw_);
-    this->get_parameter("init_x_dev", init_x_dev_);
-    this->get_parameter("init_y_dev", init_y_dev_);
-    this->get_parameter("init_yaw_dev", init_yaw_dev_);
+    // 2. 初期位置、分散
+    init_x_ = this->declare_parameter("init_x", 0.0);
+    init_y_ = this->declare_parameter("init_y", 0.0);
+    init_yaw_ = this->declare_parameter("init_yaw", 0.0);
+    init_x_dev_ = this->declare_parameter("init_x_dev", 0.1);
+    init_y_dev_ = this->declare_parameter("init_y_dev", 0.1);
+    init_yaw_dev_ = this->declare_parameter("init_yaw_dev", 0.05);
 
     // 3. リセット関連
-    this->declare_parameter("alpha_th", 0.01);
-    this->declare_parameter("expansion_threshold", 0.005);
-    this->declare_parameter("reset_count_limit", 5);
-    this->declare_parameter("expansion_x_dev", 0.5);
-    this->declare_parameter("expansion_y_dev", 0.5);
-    this->declare_parameter("expansion_yaw_dev", 0.2);
-
-    this->get_parameter("alpha_th", alpha_th_);
-    this->get_parameter("expansion_threshold", expansion_threshold_);
-    this->get_parameter("reset_count_limit", reset_count_limit_);
-    this->get_parameter("expansion_x_dev", expansion_x_dev_);
-    this->get_parameter("expansion_y_dev", expansion_y_dev_);
-    this->get_parameter("expansion_yaw_dev", expansion_yaw_dev_);
+    alpha_th_ = this->declare_parameter("alpha_th", 0.01);
+    expansion_threshold_ = this->declare_parameter("expansion_threshold", 0.005);
+    reset_count_limit_ = this->declare_parameter("reset_count_limit", 5);
+    expansion_x_dev_ = this->declare_parameter("expansion_x_dev", 0.5);
+    expansion_y_dev_ = this->declare_parameter("expansion_y_dev", 0.5);
+    expansion_yaw_dev_ = this->declare_parameter("expansion_yaw_dev", 0.2);
 
     // 4. センサ関連
-    this->declare_parameter("laser_step", 10);
-    this->declare_parameter("sensor_noise_ratio", 0.05);
-    this->declare_parameter("ignore_angle_range_list", std::vector<double>{});
-
-    this->get_parameter("laser_step", laser_step_);
-    this->get_parameter("sensor_noise_ratio", sensor_noise_ratio_);
-    this->get_parameter("ignore_angle_range_list", ignore_angle_range_list_);
+    laser_step_ = this->declare_parameter<int>("laser_step", 10);
+    sensor_noise_ratio_ = this->declare_parameter<double>("sensor_noise_ratio", 0.05);
+    ignore_angle_range_list_ = this->declare_parameter<std::vector<double>>("ignore_angle_range_list", std::vector<double>{});
 
     // 5. OdomModel関連 (ff, fr, rf, rr)
-    this->declare_parameter("ff", 0.17);
-    this->declare_parameter("fr", 0.0005);
-    this->declare_parameter("rf", 0.13);
-    this->declare_parameter("rr", 0.2);
-
-    this->get_parameter("ff", ff_);
-    this->get_parameter("fr", fr_);
-    this->get_parameter("rf", rf_);
-    this->get_parameter("rr", rr_);
+    ff_ = this->declare_parameter<double>("ff", 0.17);
+    fr_ = this->declare_parameter<double>("fr", 0.0005);
+    rf_ = this->declare_parameter<double>("rf", 0.13);
+    rr_ = this->declare_parameter<double>("rr", 0.2);
 
     // 6. その他のフラグ
-    this->declare_parameter("flag_init_noise", true);
-    this->declare_parameter("flag_reverse", false);
-
-    this->get_parameter("flag_init_noise", flag_init_noise_);
-    this->get_parameter("flag_reverse", flag_reverse_);
+    flag_init_noise_ = this->declare_parameter<bool>("flag_init_noise", true);
+    flag_reverse_ = this->declare_parameter<bool>("flag_reverse", false);
 
     // ----- オブジェクトの初期化 -----
-
     // odometryのモデルの初期化
     odom_model_ = OdomModel(ff_, fr_, rf_, rr_);
 
@@ -116,6 +83,7 @@ Localizer::Localizer() : Node("team_localizer")
 
     RCLCPP_INFO(this->get_logger(), "Localizer: Initialized with all parameters.");
 }
+
 // mapのコールバック関数
 void Localizer::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
 {
@@ -153,8 +121,6 @@ void Localizer::initialize()
     this->get_parameter("init_x", i_x);
     this->get_parameter("init_y", i_y);
     this->get_parameter("init_yaw", i_yaw);
-    
-    Particle particle;
 
     // 初期位置近傍にパーティクルを配置
     for (int i = 0; i < max_particle_num_; i++) {
@@ -164,16 +130,15 @@ void Localizer::initialize()
         double pyaw = norm_rv(i_yaw, 0.1);
         particles_.emplace_back(px, py, pyaw, 1.0 / max_particle_num_);
     }
-    // パーティクルの重みの初期化
+    
     estimated_pose_.set(i_x, i_y, i_yaw);
-    reset_weight();
 }
 
 // main文のループ内で実行される関数
 // tfのbroadcastと位置推定，パブリッシュを行う
 void Localizer::process()
 {
-    // すべてのデータが揃うまで何もしない
+    
     if (flag_map_ && flag_laser_ && flag_odom_) 
     {
         // 1. 移動更新
@@ -188,7 +153,7 @@ void Localizer::process()
         publish_estimated_pose();
 
         // odomとscanは次回の更新のためにフラグを下ろす
-        // mapは一度受け取れば使い回すので true のままでもOK
+        // mapは一度受け取れば使い回すので true のままでOK
         flag_odom_ = false;
         flag_laser_ = false; 
     }
@@ -292,7 +257,7 @@ void Localizer::motion_update()
         for (auto& p : particles_) 
         {
             // パーティクル自身の向き(p.pose_.yaw())を基準にするのが重要
-            double relative_direction = normalize_angle(std::atan2(dy, dx) - p.pose_.yaw());
+            double relative_direction = normalize_angle(std::atan2(dy, dx) - last_yaw);
             
             p.pose_.move(dist, relative_direction, dth, 
                          odom_model_.get_fw_noise(), odom_model_.get_rot_noise());
@@ -309,14 +274,22 @@ void Localizer::motion_update()
 void Localizer::observation_update()
 {
     double total_weight = 0.0;
-    // パーティクル1つのレーザ1本における平均尤度を算出
+
     for (auto& p : particles_) {
-        double w = p.likelihood(map_, laser_, sensor_noise_ratio_, laser_step_, ignore_angle_range_list_);
+        double w = p.likelihood(
+            map_,
+            laser_,
+            sensor_noise_ratio_,
+            laser_step_,
+            ignore_angle_range_list_
+        );
         p.set_weight(w);
         total_weight += w;
     }
 
-    // 重みの正規化
+    // 正規化前の平均尤度
+    double alpha = total_weight / static_cast<double>(particles_.size());
+
     if (total_weight > 0.0) {
         for (auto& p : particles_) {
             p.set_weight(p.weight() / total_weight);
@@ -325,14 +298,10 @@ void Localizer::observation_update()
         reset_weight();
     }
 
-    // 推定位置の決定
     estimate_pose();
 
-    // リサンプリングの前に、自己位置を見失っていないかチェックして必要なら膨張リセット
-    expansion_resetting();
+    expansion_resetting(alpha);
 
-    // リサンプリング（周辺尤度 alpha を計算して渡す）
-    double alpha = calc_marginal_likelihood();
     resampling(alpha);
 }
 
@@ -391,28 +360,84 @@ void Localizer::normalize_belief()
 }
 
 // 膨張リセット（EMCLの場合）
-void Localizer::expansion_resetting()
+void Localizer::expansion_resetting(double alpha)
 {
-    // 周辺尤度（平均尤度）を計算
-    double alpha = calc_marginal_likelihood();
-
-    // しきい値を下回った場合にリセット発動
-    if (alpha < expansion_threshold_) 
-    {
-        RCLCPP_WARN(this->get_logger(), "Expansion Resetting Triggered! (alpha: %f)", alpha);
-
-        for (auto& p : particles_) {
-            // 直書きされていた数値を、宣言済みのパラメータ変数に置き換え
-            double px = norm_rv(estimated_pose_.x(), expansion_x_dev_); 
-            double py = norm_rv(estimated_pose_.y(), expansion_y_dev_);
-            double pyaw = norm_rv(estimated_pose_.yaw(), expansion_yaw_dev_);
-
-            p.pose_.set(px, py, pyaw);
-        }
-        
-        // リセット後は重みを均一化
-        reset_weight();
+    if (alpha < expansion_threshold_) {
+        reset_counter++;
+    } else {
+        reset_counter = 0;
+        return;
     }
+
+    if (reset_counter < reset_count_limit_) {
+        return;
+    }
+
+    emcl_reset();
+    reset_counter = 0;
+}
+
+void Localizer::emcl_reset()
+{
+    int n = particles_.size();
+    int local_num = static_cast<int>(n * 0.9);
+
+    // 70%：推定位置周辺に広げる
+    for (int i = 0; i < local_num; i++) {
+        double px = norm_rv(estimated_pose_.x(), expansion_x_dev_);
+        double py = norm_rv(estimated_pose_.y(), expansion_y_dev_);
+        double pyaw = norm_rv(estimated_pose_.yaw(), expansion_yaw_dev_);
+        particles_[i].pose_.set(px, py, pyaw);
+    }
+
+    // 30%：地図全体にランダム配置
+    for (int i = local_num; i < n; i++) {
+        set_random_particle_in_free_space(particles_[i]);
+    }
+
+    reset_weight();
+}
+
+void Localizer::set_random_particle_in_free_space(Particle& p)
+{
+    if (map_.data.empty()) {
+        return;
+    }
+
+    std::uniform_int_distribution<int> x_dist(0, map_.info.width - 1);
+    std::uniform_int_distribution<int> y_dist(0, map_.info.height - 1);
+    std::uniform_real_distribution<double> yaw_dist(-M_PI, M_PI);
+
+    // 無限ループ防止
+    const int max_trial = 1000;
+
+    for (int trial = 0; trial < max_trial; trial++) {
+        int grid_x = x_dist(engine_);
+        int grid_y = y_dist(engine_);
+
+        int index = grid_y * map_.info.width + grid_x;
+
+        // 空きセルだけ採用
+        if (map_.data[index] == 0) {
+            double x = map_.info.origin.position.x
+                     + (grid_x + 0.5) * map_.info.resolution;
+
+            double y = map_.info.origin.position.y
+                     + (grid_y + 0.5) * map_.info.resolution;
+
+            double yaw = yaw_dist(engine_);
+
+            p.pose_.set(x, y, yaw);
+            return;
+        }
+    }
+
+    // 空きセルが見つからなかった場合の保険
+    double px = norm_rv(estimated_pose_.x(), expansion_x_dev_);
+    double py = norm_rv(estimated_pose_.y(), expansion_y_dev_);
+    double pyaw = norm_rv(estimated_pose_.yaw(), expansion_yaw_dev_);
+
+    p.pose_.set(px, py, pyaw);
 }
 
 // リサンプリング（系統サンプリング）
@@ -466,11 +491,11 @@ void Localizer::publish_particles()
 {
     if(is_visible_ && !particles_.empty() )
     {
-        // 1. ヘッダー情報の更新（最新の時刻とフレームID）
+        // 1. ヘッダー更新
         particle_cloud_msg_.header.stamp = this->now();
         particle_cloud_msg_.header.frame_id = map_.header.frame_id;
 
-        // 2. 現在のパーティクル数に合わせて PoseArray のサイズを調整
+        // 2. サイズ調整
         if (particle_cloud_msg_.poses.size() != particles_.size()) {
             particle_cloud_msg_.poses.resize(particles_.size());
         }
