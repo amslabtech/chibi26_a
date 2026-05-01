@@ -22,7 +22,7 @@ DWAPlanner::DWAPlanner() : Node("local_path_planner"), clock_(RCL_ROS_TIME)
     this->declare_parameter("weight_heading1", 0.2);
     this->declare_parameter("weight_dist1", 0.5);
     this->declare_parameter("weight_vel", 0.3);
-    this->declare_parameter("roomba_radius", 0.4);
+    this->declare_parameter("roomba_radius", 0.3);
     this->declare_parameter("radius_margin1", 0.2);
     this->declare_parameter("vel_reso", 0.01);
     this->declare_parameter("yawrate_reso", 0.05);
@@ -95,7 +95,7 @@ void DWAPlanner::process()
     // 修正：frame_id が空なら変換処理そのものをスキップする
     try {
         // goal_msg_ など、受信した元のメッセージをメンバ変数に保存しておく必要があります
-        auto transform = tf_buffer_->lookupTransform("base_link", goal_msg_.header.frame_id, tf2::TimePointZero, tf2::durationFromSec(0.01));
+        auto transform = tf_buffer_->lookupTransform("base_link", goal_msg_.header.frame_id, tf2::TimePointZero);
         // local_goal_original_ は map座標系の PointStamped
         tf2::doTransform(goal_msg_, local_goal_, transform); 
     } catch (tf2::TransformException &ex) {
@@ -106,8 +106,11 @@ void DWAPlanner::process()
     if (flag_obs_poses_) {
         try {
             // 障害物データの frame_id から base_link への変換を取得
-            auto trans_obs = tf_buffer_->lookupTransform("base_link", obs_poses_.header.frame_id, tf2::TimePointZero);
-            
+            // auto trans_obs = tf_buffer_->lookupTransform("base_link", obs_poses_.header.frame_id, tf2::TimePointZero);
+            // ######追加
+            auto trans_obs = tf_buffer_->lookupTransform("base_link", obs_poses_.header.frame_id, obs_poses_.header.stamp, tf2::durationFromSec(0.1));
+            transformed_obs.poses.clear();
+            // ######
             for (auto& p_in : obs_poses_.poses) {
                 geometry_msgs::msg::Pose p_out;
                 // 座標変換の適用（簡易的な実装例）
@@ -307,8 +310,8 @@ double DWAPlanner::calc_dist_eval(const std::vector<State>& traj, const geometry
     for (const auto& s : traj) {
         for (const auto& obs : obs_list.poses) {
             double d1 = std::hypot(s.x - obs.position.x, s.y - obs.position.y);
-            // double d = std::hypot(obs.position.x, obs.position.y);
-            // if (d < 0.1) continue;
+            double d = std::hypot(obs.position.x, obs.position.y);
+            if (d < 0.1) continue;
             if (d1 < robot_radius_ + radius_margin1_) return -1e6;//-1e6
             min_dist = std::min(min_dist, d1);
         }
@@ -318,9 +321,11 @@ double DWAPlanner::calc_dist_eval(const std::vector<State>& traj, const geometry
 
 double DWAPlanner::calc_vel_eval(const std::vector<State>& traj)
 {
-    if (traj[0].vx < 0) return 0.0; 
+    // if (traj[0].vx < 0) return 0.0; 
 
     double vx_score = traj[0].vx / max_vel1_;
+    // double vx_score = std::abs(traj[0].vx) / max_vel1_;
+    
     // 【強力な修正】横速度 vy が少しでもあればスコアを大幅に減点する
     // vy_penalty が 0 の時（直進）が最強になるようにする
     double vy_penalty = std::abs(traj[0].vy) / max_vel_y1_;

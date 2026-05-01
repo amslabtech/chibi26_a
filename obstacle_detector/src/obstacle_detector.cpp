@@ -103,7 +103,7 @@ bool ObstacleDetector::is_ignore_scan(int index)
     //     //左前の柱を無視＜-135度=-2.356rad（-2.4rad ~ -2.0rad）付近＞
     //     if(angle > (-2.4 - angle_margin) && angle < (-2.0 + angle_margin)) return true;
 
-    //     return true;
+    //     // return true;
     // }
 
     if(angle > (0.7 - angle_margin) && angle < (0.85 + angle_margin)) return true;
@@ -113,6 +113,8 @@ bool ObstacleDetector::is_ignore_scan(int index)
     if(angle > (-0.85 - angle_margin) && angle < (-0.7 + angle_margin)) return true;
         //左前の柱を無視＜-135度=-2.356rad（-2.4rad ~ -2.0rad）付近＞
     if(angle > (-2.4 - angle_margin) && angle < (-2.0 + angle_margin)) return true;
+
+    // if(range < obs_dist) return true;
 
     return false;
 }

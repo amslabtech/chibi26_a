@@ -86,7 +86,6 @@ void LocalMapCreator::update_map()
         int end_gy = std::floor((pose.position.y - local_map_.info.origin.position.y) / map_reso_);
 
         // 2. 【追加】中心からその点までを「白（0：空き）」で塗りつぶす
-        // これでLidarが通った軌跡が白くなります
         raytrace(start_gx, start_gy, end_gx, end_gy);
 
         // 3. 【修正】本当に障害物（柱より遠い）場合だけ「黒（100）」を置く

@@ -85,7 +85,8 @@ def generate_launch_description():
                     arguments=['0', '0', '0', '0', '0', '0', '1','/base_link', '/laser'],
                     ),
                 ExecuteProcess(
-                    cmd=['ros2', 'bag', 'play', '/home/user/ws/src/chibi26_a/bag/team_a/rosbag2_2026_03_11-07_12_07', '--clock'], #<-bagファイルの指定を変える必要あり
+                    # cmd=['ros2', 'bag', 'play', '/home/user/ws/src/chibi26_a/bag/team_a/rosbag2_2026_03_11-07_12_07', '--clock'], #<-bagファイルの指定を変える必要あり
+                    cmd=['ros2', 'bag', 'play', '/home/user/ws/src/chibi26_a/bag/rosbag2_2026_05_01-08_42_05', '--clock'], 
                     output='screen'
                 )
             ]
