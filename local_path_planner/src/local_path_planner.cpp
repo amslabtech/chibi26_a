@@ -16,8 +16,8 @@ DWAPlanner::DWAPlanner() : Node("local_path_planner"), clock_(RCL_ROS_TIME)
     this->declare_parameter("max_accel", 2.0);
     this->declare_parameter("min_vel", 0.0);
     this->declare_parameter("max_dyawrate", 2.0);
-    this->declare_parameter("predict_time1", 1.5);
-    this->declare_parameter("predict_time2", 1.2);
+    this->declare_parameter("predict_time1", 1.5);  //1.5
+    this->declare_parameter("predict_time2", 1.2);  //1.2
     this->declare_parameter("goal_tolerance", 0.2);
     this->declare_parameter("weight_heading1", 0.2);
     this->declare_parameter("weight_dist1", 0.5);
@@ -312,7 +312,7 @@ double DWAPlanner::calc_dist_eval(const std::vector<State>& traj, const geometry
             double d1 = std::hypot(s.x - obs.position.x, s.y - obs.position.y);
             double d = std::hypot(obs.position.x, obs.position.y);
             if (d < 0.1) continue;
-            if (d1 < robot_radius_ + radius_margin1_) return -1e6;//-1e6
+            if (d1 < robot_radius_ + radius_margin1_) return -50;//-1e6
             min_dist = std::min(min_dist, d1);
         }
     }
@@ -330,7 +330,7 @@ double DWAPlanner::calc_vel_eval(const std::vector<State>& traj)
     // vy_penalty が 0 の時（直進）が最強になるようにする
     double vy_penalty = std::abs(traj[0].vy) / max_vel_y1_;
     // 0.8 という係数は「横移動への嫌悪感」です。大きくするほど直進を好みます。
-    return vx_score - (vy_penalty * 0.8);
+    return vx_score - (vy_penalty * 0.3);   //0.8
 
     // return traj[0].vx / max_vel1_;
 

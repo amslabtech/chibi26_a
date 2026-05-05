@@ -41,14 +41,14 @@ local_path_planner:
     predict_time2: 1.2       # 減速時：少し短めに予測
 
     # 機体サイズ(半径) [m]
-    roomba_radius: 0.3       # 機体の中心から角までの距離
+    roomba_radius: 0.15       # 機体の中心から角までの距離
     radius_margin1: 0.2     # 安全マージン（平常時）
     radius_margin2: 0.02     # 安全マージン（接近時）
 
     # 重み定数 [-] (合計1.0にする必要はないが、バランスが重要)
-    weight_heading1: 0.3     # ゴールへ向かう力の強さ
+    weight_heading1: 0.2     # ゴールへ向かう力の強さ
     weight_heading2: 0.8     # (減速時)
-    weight_dist1: 0.5        # 障害物を避ける力の強さ
+    weight_dist1: 0.7        # 障害物を避ける力の強さ
     weight_dist2: 0.4        # (減速時)
     weight_vel: 0.2          # 最高速を維持しようとする力
 
