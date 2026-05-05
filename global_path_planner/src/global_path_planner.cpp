@@ -8,9 +8,9 @@ using namespace std::chrono_literals;
 Astar::Astar() : Node("teamA_path_planner"), clock_(RCL_ROS_TIME)
 {
     // ###### パラメータの宣言と取得 ######
-    this->declare_parameter("margin", 0.3);
-    this->declare_parameter("way_points_x", std::vector<double>{0.0, -17.1, -17.0, 16.5, 16.5, 0.0});
-    this->declare_parameter("way_points_y", std::vector<double>{0.0, -0.767, -14.6, -14.5, -0.898, 0.0});
+    this->declare_parameter("margin", 0.30);
+    this->declare_parameter("way_points_x", std::vector<double>{0.0, 16.4, 16.2, -17.3, -17.2, 0.0});  //修正
+    this->declare_parameter("way_points_y", std::vector<double>{0.0, 0.221, 14.2, 13.8, 0.0946, 0.0});
     this->declare_parameter("test_show", false);
     this->declare_parameter("sleep_time", 0.01);
 

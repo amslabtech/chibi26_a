@@ -10,8 +10,8 @@ def generate_launch_description():
     # A*が経由する座標リスト
     config_params = {
         'margin': 0.3,
-        'way_points_x': [0.0, -17.1, -17.0, 16.5, 16.5, 0.0],
-        'way_points_y': [0.0, -0.767, -14.6, -14.5, -0.898, 0.0],
+        'way_points_x': [0.0, 16.4, 16.2, -17.3, -17.2, 0.0],
+        'way_points_y': [0.0, 0.221, 14.2, 13.8, 0.0946, 0.0],
         'test_show': True,
         'sleep_time': 0.01
     }

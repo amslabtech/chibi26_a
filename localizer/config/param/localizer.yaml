@@ -1,12 +1,12 @@
-node_name1:
+team_localizer:
   ros__parameters:
 
     # 基本設定
-    hz: ######              # ループ周期 [Hz]
-    particle_num: ######   # パーティクルの個数 [-]
-    max_particle_num: ######   #パーティクルの最大個数
-    min_particle_num: ######   #パーティクルの最小個数
-    move_dist_th: ###### # ロボットの移動開始判断用（スタートからの距離の閾値）[m]
+    hz: 10           # ループ周期 [Hz]
+    particle_num: 1000   # パーティクルの個数 [-]
+    max_particle_num: 500   #パーティクルの最大個数
+    min_particle_num: 100   #パーティクルの最小個数
+    move_dist_th: 0.1 # ロボットの移動開始判断用（スタートからの距離の閾値）[m]
 
     # 初期ポーズ関連
     init_x: 0.0       # 初期位置 [m]
@@ -31,7 +31,12 @@ node_name1:
     # 以下が無視される
     # [0] < angle < [1], [2] < angle
     # [num] -> num:index
-    ignore_angle_range_list: [######, ######, ######]
+    ignore_angle_range_list: [
+      0.61, 0.96,  #35°~55°
+      2.18, 2.53,  #125°~145°
+      -0.96, -0.61,  #-55°~-35°
+      -2.53, -2.18   #-145°~-125°
+    ]
     
     # フラグ
     flag_init_noise: true # 初期位置にノイズを加えるか
