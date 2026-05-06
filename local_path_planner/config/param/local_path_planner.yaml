@@ -25,11 +25,11 @@ local_path_planner:
 
     # 加速度制限
     max_accel: 1.5           # モータの性能に合わせて1.0〜2.5の間で調整
-    max_dyawrate: 2.0        # 旋回加速度
+    max_dyawrate: 1.0        # 旋回加速度
 
     # 速度解像度（探索の細かさ）
     vel_reso: 0.01           # 0.05m/s刻みで探索
-    yawrate_reso: 0.05        # 0.1rad/s刻みで探索
+    yawrate_reso: 0.02        # 0.1rad/s刻みで探索
 
     # 停止状態か判断する閾値
     stop_vel_th: 0.02
@@ -37,18 +37,18 @@ local_path_planner:
 
     # 時間 [s]
     dt: 0.1                  # 1/hz と合わせる
-    predict_time1: 1.5       # 平常時：2秒先まで予測
+    predict_time1: 2.5       # 平常時：2秒先まで予測
     predict_time2: 1.2       # 減速時：少し短めに予測
 
     # 機体サイズ(半径) [m]
-    roomba_radius: 0.3       # 機体の中心から角までの距離
+    roomba_radius: 0.15       # 機体の中心から角までの距離
     radius_margin1: 0.2     # 安全マージン（平常時）
     radius_margin2: 0.02     # 安全マージン（接近時）
 
     # 重み定数 [-] (合計1.0にする必要はないが、バランスが重要)
-    weight_heading1: 0.8     # ゴールへ向かう力の強さ
+    weight_heading1: 0.25     # ゴールへ向かう力の強さ
     weight_heading2: 0.8     # (減速時)
-    weight_dist1: 0.3        # 障害物を避ける力の強さ
+    weight_dist1: 0.85        # 障害物を避ける力の強さ
     weight_dist2: 0.4        # (減速時)
     weight_vel: 0.3          # 最高速を維持しようとする力
 

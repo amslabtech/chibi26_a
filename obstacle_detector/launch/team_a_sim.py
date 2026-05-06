@@ -86,7 +86,7 @@ def generate_launch_description():
                     ),
                 ExecuteProcess(
                     # cmd=['ros2', 'bag', 'play', '/home/user/ws/src/chibi26_a/bag/team_a/rosbag2_2026_03_11-07_12_07', '--clock'], #<-bagファイルの指定を変える必要あり
-                    cmd=['ros2', 'bag', 'play', '/home/user/ws/src/chibi26_a/bag/rosbag2_2026_05_01-08_42_05', '--clock'], 
+                    cmd=['ros2', 'bag', 'play', '/home/user/ws/src/chibi26_a/bag/rosbag2_2026_05_05-08_56_58', '--clock'], 
                     output='screen'
                 )
             ]

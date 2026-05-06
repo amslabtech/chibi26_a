@@ -16,13 +16,13 @@ DWAPlanner::DWAPlanner() : Node("local_path_planner"), clock_(RCL_ROS_TIME)
     this->declare_parameter("max_accel", 2.0);
     this->declare_parameter("min_vel", 0.0);
     this->declare_parameter("max_dyawrate", 2.0);
-    this->declare_parameter("predict_time1", 1.5);
+    this->declare_parameter("predict_time1", 2.0);
     this->declare_parameter("predict_time2", 1.2);
     this->declare_parameter("goal_tolerance", 0.2);
-    this->declare_parameter("weight_heading1", 0.2);
+    this->declare_parameter("weight_heading1", 0.5);
     this->declare_parameter("weight_dist1", 0.5);
     this->declare_parameter("weight_vel", 0.3);
-    this->declare_parameter("roomba_radius", 0.3);
+    this->declare_parameter("roomba_radius", 0.15);
     this->declare_parameter("radius_margin1", 0.2);
     this->declare_parameter("vel_reso", 0.01);
     this->declare_parameter("yawrate_reso", 0.05);
@@ -106,9 +106,9 @@ void DWAPlanner::process()
     if (flag_obs_poses_) {
         try {
             // 障害物データの frame_id から base_link への変換を取得
-            // auto trans_obs = tf_buffer_->lookupTransform("base_link", obs_poses_.header.frame_id, tf2::TimePointZero);
+            auto trans_obs = tf_buffer_->lookupTransform("base_link", obs_poses_.header.frame_id, tf2::TimePointZero);
             // ######追加
-            auto trans_obs = tf_buffer_->lookupTransform("base_link", obs_poses_.header.frame_id, obs_poses_.header.stamp, tf2::durationFromSec(0.1));
+            // auto trans_obs = tf_buffer_->lookupTransform("base_link", obs_poses_.header.frame_id, obs_poses_.header.stamp, tf2::durationFromSec(0.1));
             transformed_obs.poses.clear();
             // ######
             for (auto& p_in : obs_poses_.poses) {
@@ -161,17 +161,7 @@ bool DWAPlanner::can_move()
         RCLCPP_INFO(this->get_logger(), "Goal behind robot. Stopping.");
         return false;
     }
-    // double dist_to_global_goal = std::hypot(current_pose.x - path_.poses.back().pose.position.x, 
-    //                                     current_pose.y - path_.poses.back().pose.position.y);
-
-    // // 単に距離が近いだけでなく、ある程度時間が経っているか、距離を走ったかを追加
-    // if (dist_to_global_goal < goal_tolerance_ && has_moved_far_enough) 
-    // {
-    //     RCLCPP_INFO(this->get_logger(), "Goal Reached. Stopping...");
-    //     return false; 
-    // }
-    // ###################
-
+    
     return dist > goal_tolerance_;
 }
 
@@ -199,10 +189,10 @@ std::vector<double> DWAPlanner::calc_final_input(const geometry_msgs::msg::PoseA
                 auto traj = calc_traj(vx, vy, w);
                 double score = calc_evaluation(traj, current_obs);
 
-                if (vx > 0.1 && std::abs(w) < 0.01 && std::abs(vy) < 0.01) {
-                    // RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, 
-                    //     "--- Straight Candidate --- vx: %f, score: %f", vx, score);
-                }
+                // if (vx > 0.1 && std::abs(w) < 0.01 && std::abs(vy) < 0.01) {
+                //     RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 500, 
+                //         "--- Straight Candidate --- vx: %f, score: %f", vx, score);
+                // }
 
                 if (score > max_score) {
                     max_score = score;
@@ -238,21 +228,6 @@ void DWAPlanner::change_mode()
 
 void DWAPlanner::calc_dynamic_window()
 {
-    // #####　修正箇所　#####
-    // double dist_to_goal = std::hypot(local_goal_.point.x, local_goal_.point.y);
-    // double v_limit = dist_to_goal * 1.0;     
-    // double current_max_vx = std::min(max_vel_, v_limit);
-    // double current_max_vy = std::min(max_vel_y_, v_limit * 0.5); 
-    // double current_max_w  = std::min(max_yawrate_, v_limit * 2.0 + 0.2); 
-    // dw_.max_vx = std::min(current_max_vx, robot_.vx + max_accel_ * dt_);
-    // dw_.min_vx = std::max(min_vel_, robot_.vx - max_accel_ * dt_);
-    // dw_.max_vy = std::min(current_max_vy, robot_.vy + max_accel_ * dt_);
-    // dw_.min_vy = std::max(-current_max_vy, robot_.vy - max_accel_ * dt_);
-    // dw_.max_yawrate = std::min(current_max_w, robot_.yawrate + max_dyawrate_ * dt_);
-    // dw_.min_yawrate = std::max(-current_max_w, robot_.yawrate - max_dyawrate_ * dt_);
-    // #####################
-
-
     dw_.max_vx = std::min(max_vel_, robot_.vx + max_accel_ * dt_);
     dw_.min_vx = std::max(min_vel_, robot_.vx - max_accel_ * dt_);
     dw_.max_vy = std::min(max_vel_y_, robot_.vy + max_accel_ * dt_);
@@ -310,13 +285,15 @@ double DWAPlanner::calc_dist_eval(const std::vector<State>& traj, const geometry
     for (const auto& s : traj) {
         for (const auto& obs : obs_list.poses) {
             double d1 = std::hypot(s.x - obs.position.x, s.y - obs.position.y);
-            double d = std::hypot(obs.position.x, obs.position.y);
-            if (d < 0.1) continue;
+            // double d = std::hypot(obs.position.x, obs.position.y);
+            // if (d < 0.1) continue;
             if (d1 < robot_radius_ + radius_margin1_) return -1e6;//-1e6
             min_dist = std::min(min_dist, d1);
         }
     }
-    return min_dist / search_range_;
+    double score_dist = min_dist / search_range_;
+    // return score_dist * score_dist;
+    return score_dist;
 }
 
 double DWAPlanner::calc_vel_eval(const std::vector<State>& traj)
@@ -325,12 +302,10 @@ double DWAPlanner::calc_vel_eval(const std::vector<State>& traj)
 
     double vx_score = traj[0].vx / max_vel1_;
     // double vx_score = std::abs(traj[0].vx) / max_vel1_;
-    
+    double w_score = std::abs(traj[0].yawrate) / max_yawrate_;
     // 【強力な修正】横速度 vy が少しでもあればスコアを大幅に減点する
-    // vy_penalty が 0 の時（直進）が最強になるようにする
     double vy_penalty = std::abs(traj[0].vy) / max_vel_y1_;
-    // 0.8 という係数は「横移動への嫌悪感」です。大きくするほど直進を好みます。
-    return vx_score - (vy_penalty * 0.8);
+    return (vx_score * 0.7) - (vy_penalty * 0.3);
 
     // return traj[0].vx / max_vel1_;
 

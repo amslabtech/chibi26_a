@@ -11,8 +11,8 @@ LocalGoalCreator::LocalGoalCreator() : Node("LocalGoalCreator")
     hz_ = 10; //周期
     index_step_ = 1; //1回で更新するインデックス数
     goal_index_ = 0; //グローバルパス内におけるローカルゴールのインデックス
-    target_distance_ = 2.0; // ローカルゴールとする前方距離 [m]2.0
-    is_path_ = false;\
+    target_distance_ = 1.0; // ローカルゴールとする前方距離 [m]2.0
+    is_path_ = false;
 
     // Subscriberの定義
     path_sub_ = this->create_subscription<nav_msgs::msg::Path>(

@@ -91,7 +91,7 @@ private:
     std::vector<double> mode_log_;
     double weight_heading_, weight_heading1_;
     double weight_dist_, weight_dist1_;
-    double weight_vel_;
+    double weight_vel_, score_dist;
     
     rclcpp::Clock clock_;
     

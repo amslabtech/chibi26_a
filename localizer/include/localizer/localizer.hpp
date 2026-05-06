@@ -45,6 +45,9 @@ class Localizer : public rclcpp::Node
         double normalize_angle(double angle);                    // 適切な角度(-M_PI ~ M_PI)を返す
         double norm_rv(const double mean, const double stddev);  // ランダム変数生成関数（正規分布）
         void   resampling(const double alpha);                   // リサンプリング（系統サンプリング）
+        void set_random_particle_in_free_space(Particle& p);
+        void expansion_resetting(double alpha);
+        
 
         // ----- 関数（引数なし）------
         void   reset_weight();             // パーティクルの重みの初期化
@@ -54,7 +57,8 @@ class Localizer : public rclcpp::Node
         void   observation_update();       // 観測更新
         void   estimate_pose();            // 推定位置の決定
         void   normalize_belief();         // 重みの正規化
-        void   expansion_resetting();      // 膨張リセット
+        void emcl_reset();
+        
         void   publish_estimated_pose();   // 推定位置のパブリッシュ
         void   publish_particles();        // パーティクルクラウドのパブリッシュ
         double calc_marginal_likelihood(); // 周辺尤度の算出
@@ -66,7 +70,6 @@ class Localizer : public rclcpp::Node
         rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr sub_laser_;
         rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr sub_initialpose_;
         
-
         // Publisher
         rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pub_estimated_pose_;
         rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr pub_particle_cloud_;
