@@ -287,9 +287,15 @@ double DWAPlanner::calc_dist_eval(const std::vector<State>& traj, const geometry
             double d1 = std::hypot(s.x - obs.position.x, s.y - obs.position.y);
             // double d = std::hypot(obs.position.x, obs.position.y);
             // if (d < 0.1) continue;
-            if (d1 < robot_radius_ + radius_margin1_) return -1e6;//-1e6
+            if (d1 < robot_radius_ + radius_margin1_) {
+                RCLCPP_INFO(this->get_logger(), "give up!.");
+                return -1e6;//-1e6
+            }
             min_dist = std::min(min_dist, d1);
         }
+    }
+    if (min_dist > search_range_) {
+        return 1.0; 
     }
     double score_dist = min_dist / search_range_;
     // return score_dist * score_dist;
@@ -304,12 +310,9 @@ double DWAPlanner::calc_vel_eval(const std::vector<State>& traj)
     // double vx_score = std::abs(traj[0].vx) / max_vel1_;
     double w_score = std::abs(traj[0].yawrate) / max_yawrate_;
     // 【強力な修正】横速度 vy が少しでもあればスコアを大幅に減点する
-    double vy_penalty = std::abs(traj[0].vy) / max_vel_y1_;
-    return (vx_score * 0.7) - (vy_penalty * 0.3);
-
-    // return traj[0].vx / max_vel1_;
-
-    // return std::abs(traj[0].vx) / max_vel1_;
+    // double vy_penalty = std::abs(traj[0].vy) / max_vel_y1_;
+    // return (vx_score * 0.7) - (vy_penalty * 0.3);
+    return vx_score;
 }
 
 void DWAPlanner::visualize_traj(const std::vector<State>& traj, rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pub) {

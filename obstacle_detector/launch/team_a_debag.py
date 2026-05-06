@@ -71,7 +71,7 @@ def generate_launch_description():
             namespace='',
             output='screen',
             parameters=[{
-                'yaml_filename': '/home/user/ws/src/chibi26_a/bag/map/a_map.yaml', #<-ファイルのある場所を要調整
+                'yaml_filename': '/home/user/ws/src/chibi26_a/bag/team_a/map/a_map.yaml', #<-ファイルのある場所を要調整
                 # 'yaml_filename': '/home/user/ws/map/map.yaml'
                 'use_sim_time': True
             }]
